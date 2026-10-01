@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* ==========================================================================
+   TIPOGRAFIA
+   Para cambiar la fuente: declara la familia en nuxt.config.ts (fonts.families)
+   y actualiza el nombre de aqui. Sin esta variable, @nuxt/fonts no detecta
+   que la familia se usa y no la descarga.
+   ========================================================================== */
+
+@theme {
+  --font-sans: 'Inter', sans-serif;
+}
+
+/* ==========================================================================
+   TEMA
+   Una sola capa semantica: los tokens --ui-* de Nuxt UI.
+   Nuxt UI genera --ui-primary como --ui-color-primary-500 en light y
+   --ui-color-primary-400 en dark, asi que el switch 500/400 es automatico.
+   Aqui solo se sobreescriben los neutros y superficies.
+
+   PARA USAR OTRA MARCA:
+   1. Color de marca -> app.config.ts, campo ui.colors.primary
+   2. Neutros, superficies y bordes -> los bloques :root y .dark de abajo
+   ========================================================================== */
+
+:root {
+  /* Superficies: de la pagina hacia el elemento mas elevado */
+  --ui-bg: #ffffff;
+  --ui-bg-muted: #fafafa;
+  --ui-bg-elevated: #f4f4f5;
+  --ui-bg-accented: #e4e4e7;
+  --ui-bg-inverted: #18181b;
+
+  /* Texto: de mayor a menor enfasis */
+  --ui-text: #3f3f46;
+  --ui-text-muted: #71717a;
+  --ui-text-dimmed: #a1a1aa;
+  --ui-text-toned: #52525b;
+  --ui-text-highlighted: #18181b;
+  --ui-text-inverted: #ffffff;
+
+  /* Bordes */
+  --ui-border: #e4e4e7;
+  --ui-border-muted: #f4f4f5;
+  --ui-border-accented: #d4d4d8;
+  --ui-border-inverted: #18181b;
+}
+
+/* Negro apurado, no puro: la escalera de grises permite elevar superficies
+   y evita halation en el texto. Mantener este orden de luminosidad. */
+.dark {
+  --ui-bg: #0a0a0a;
+  --ui-bg-muted: #121212;
+  --ui-bg-elevated: #171717;
+  --ui-bg-accented: #262626;
+  --ui-bg-inverted: #fafafa;
+
+  --ui-text: #e4e4e7;
+  --ui-text-muted: #a1a1aa;
+  --ui-text-dimmed: #71717a;
+  --ui-text-toned: #d4d4d8;
+  --ui-text-highlighted: #fafafa;
+  --ui-text-inverted: #18181b;
+
+  --ui-border: #262626;
+  --ui-border-muted: #1c1c1c;
+  --ui-border-accented: #333333;
+  --ui-border-inverted: #fafafa;
+}
+
+/* Nuxt UI no cubre texto con gradiente, asi que se expone como utilidad.
+   Usa los shades crudos de primary porque --ui-primary ya se resuelve a un
+   unico shade por tema y un gradiente necesita dos.
+   Sigue al color de marca automaticamente: no hay nada que cambiar aqui
+   si cambias ui.colors.primary en app.config.ts. */
+@utility text-gradient {
+  background-image: linear-gradient(
+    to right,
+    var(--ui-color-primary-500),
+    var(--ui-color-primary-400)
+  );
+}
+
+html {
+  background-color: var(--ui-bg);
+  color: var(--ui-text);
+}

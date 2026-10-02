@@ -117,13 +117,68 @@ Definidas por Nuxt UI a partir de los tokens. No hace falta memorizar hex, estas
 
 ## Componentes propios
 
-`app/components/BaseTitle.vue` es el único componente añadido. Existe porque Nuxt UI no ofrece texto con gradiente. Cualquier otro componente (`UCard`, `UButton`, `UBadge`, `UModal`, `UTable`…) ya viene incluido y no necesita uno propio equivalente.
+Dos componentes añadidos. Cualquier otro (`UCard`, `UButton`, `UBadge`,
+`UModal`, `UTable`…) ya viene incluido en Nuxt UI y no necesita uno propio.
+
+### `GradientTitle`
+
+Título con el degradado de marca. Existe porque Nuxt UI no cubre texto con
+gradiente.
 
 ```vue
-<BaseTitle as="h1" align="center">
-  Título
-</BaseTitle>
+<GradientTitle as="h1" size="xl" align="center">
+  Sistema de diseño
+</GradientTitle>
 ```
+
+| Prop | Valores | Default |
+| --- | --- | --- |
+| `as` | `h1`–`h6`, `span` | `h1` |
+| `size` | `sm`, `md`, `lg`, `xl` | `lg` |
+| `align` | `left`, `center` | `center` |
+
+El degradado es `--ui-color-primary-500` → `--ui-color-primary-400`, los dos
+shades que Nuxt UI resuelve como `--ui-primary` según el tema, así que sigue
+al color de marca sin configuración. La utilidad `text-gradient` que lo aplica
+está definida en `main.css`.
+
+Dentro de un slot que ya trae su propio elemento —el `<h1>` de `UPageHero`, por
+ejemplo— usa `as="span"`: un `<h1>` dentro de un `<h1>` es HTML inválido y
+duplica el rol de encabezado.
+
+### `RevealOnScroll`
+
+Revela un bloque al entrar en pantalla. VueUse decide *cuándo* y Tailwind
+decide *cómo*; ninguna de las dos capas conoce a la otra.
+
+```vue
+<RevealOnScroll animation="fade-up" :delay="100">
+  <UPageSection title="Sección" />
+</RevealOnScroll>
+```
+
+| Prop | Valores | Default |
+| --- | --- | --- |
+| `animation` | `fade`, `fade-up`, `fade-down`, `from-left`, `from-right`, `zoom-in`, `zoom-out`, `blur` | `fade-up` |
+| `easing` | `out`, `in-out`, `soft`, `back` | `soft` |
+| `sequence` | `together`, `lead`, `staged` | `staged` |
+| `duration` | milisegundos | `700` |
+| `delay` | milisegundos | `0` |
+| `once` | booleano | `false` |
+
+Con `once: false` el bloque se oculta al salir de la pantalla y vuelve a
+animarse cada vez que regresa. `sequence` encadena las propiedades dentro de una
+misma entrada —primero la opacidad, después el desplazamiento— y la salida se
+resuelve más rápido y sin encadenar. La coreografía está en
+`app/utils/reveal.ts`.
+
+Respeta `prefers-reduced-motion`: cada animación declara su propio reset de
+`motion-reduce`, sin tocar la lógica.
+
+## Flujo de trabajo
+
+`main` solo recibe releases, `develop` es el punto de integración y las ramas de
+trabajo se quedan en local. Ver [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Personalización por proyecto
 

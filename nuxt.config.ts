@@ -3,7 +3,14 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
-    '@nuxt/fonts'
+    '@nuxt/fonts',
+    '@vueuse/nuxt'
+  ],
+
+  // Sin pathPrefix, una seccion en components/sections/HeroSection.vue se
+  // importa como <HeroSection /> y no como <SectionsHeroSection />.
+  components: [
+    { path: '~/components', pathPrefix: false }
   ],
 
   devtools: {

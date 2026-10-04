@@ -52,5 +52,9 @@ useSeoMeta({
     <RevealOnScroll animation="zoom-in">
       <RepeatSection />
     </RevealOnScroll>
+
+    <RevealOnScroll animation="fade-up">
+      <ImagesSection />
+    </RevealOnScroll>
   </UPage>
 </template>

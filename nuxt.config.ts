@@ -4,6 +4,7 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
     '@nuxt/ui',
     '@nuxt/fonts',
+    '@nuxt/image',
     '@vueuse/nuxt'
   ],
 
@@ -19,9 +20,10 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  routeRules: {
-    '/': { prerender: true }
-  },
+  // A proposito no hay routeRules con prerender: prerenderear '/' hace que
+  // nitro emita solo output estatico, y en estatico no hay runtime que sirva
+  // las variantes de ipx, asi que /_ipx daba 404. Con SSR el handler de ipx
+  // viaja al build y las imagenes se optimizan tambien en produccion.
 
   compatibilityDate: '2026-06-30',
 
@@ -38,5 +40,12 @@ export default defineNuxtConfig({
     families: [
       { name: 'Inter', weights: [400, 600, 700, 900] }
     ]
+  },
+
+  // ipx es el proveedor por defecto y optimiza en local, sin servicios
+  // externos: recorta, convierte y sirve la imagen ya ajustada al srcset.
+  image: {
+    quality: 80,
+    format: ['avif', 'webp']
   }
 })

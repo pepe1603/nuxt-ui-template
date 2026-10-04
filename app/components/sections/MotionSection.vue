@@ -183,11 +183,12 @@ const tile = computed(() => ({
 
             <div class="flex h-16 items-center justify-center">
               <Motion
-                :animate="{ y: [-20, 0, -20] }"
+                :animate="{ y: [-20, 0] }"
                 :transition="spring.stiffness
                   ? { type: 'spring', stiffness: spring.stiffness, damping: spring.damping }
                   : { duration: 0.4 }"
                 :repeat="Infinity"
+                repeat-type="reverse"
                 :repeat-delay="0.6"
                 class="bg-primary size-8 rounded-full"
               />

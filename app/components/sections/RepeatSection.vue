@@ -39,7 +39,7 @@ const blocks = [
   {
     animation: 'fade-down',
     easing: 'back',
-    icon: 'i-lucide-bounce',
+    icon: 'i-lucide-arrow-down-up',
     title: 'Con curva back',
     text: 'La curva cubic-bezier(0.34,1.4,0.64,1) se pasa de su destino y vuelve. Se nota al entrar, no al salir.'
   }

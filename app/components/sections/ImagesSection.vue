@@ -1,27 +1,28 @@
 <script setup lang="ts">
-import valle from '~/assets/images/valle.jpg'
-import rio from '~/assets/images/rio.jpg'
-import panorama from '~/assets/images/panorama.jpg'
-
-// El modulo @nuxt/image deja de pedir imagenes ya optimizadas a mano: ipx
-// recorta, convierte y sirve en el tamano que pide el navegador. Cada
-// ejemplo de aqui usa el mismo archivo original con un recorte distinto, y
-// en el archivo importado no hay ni una transformacion.
+// El src es una URL absoluta, no un archivo del repo: estas imagenes no se
+// sirven desde el servidor. El host tiene que estar declarado en
+// image.domains, o ipx devuelve la URL sin transformar y no hay srcset.
+//
 // El placeholder va como numero, no como string: NuxtImg lee un string como
 // una URL y lo usaria como src. Se queda en [width, height, quality] porque
 // la cuarta posicion emite b_<valor>, que ipx v2 lee como background y espera
 // un color: con un 4 ahi la imagen devuelve 400.
 const PLACEHOLDER: [number, number, number?] = [32, 32, 20]
 
+const placeholder = {
+  src: 'https://4kwallpapers.com/images/walls/packs/103.jpg',
+  alt: 'Carga con placeholder'
+}
+
 const responsive = [
   {
-    src: valle,
+    src: 'https://4kwallpapers.com/images/walls/thumbs_3t/6091.jpg',
     alt: 'Cuenca entre montanas al atardecer',
     grid: 'sm:col-span-2 lg:col-span-1',
     sizes: '100vw sm:50vw lg:33vw'
   },
   {
-    src: rio,
+    src: 'https://4kwallpapers.com/images/walls/thumbs_3t/10146.jpg',
     alt: 'Rio serpenteante entre canonones oscuros',
     grid: 'lg:col-span-2',
     sizes: '100vw lg:66vw'
@@ -31,15 +32,18 @@ const responsive = [
 // fit=cover con el contenedor de altura fija hace el recorte: la proporcion
 // la fija el height del contenedor, no el width original.
 const crops = [
-  { src: panorama, alt: 'Panoramica de la cordillera', height: 'h-64' },
-  { src: valle, alt: 'Valle recortado en 4:3', height: 'h-64' },
-  { src: rio, alt: 'Rio recortado en 1:1', height: 'h-64' }
+  { src: 'https://4kwallpapers.com/images/walls/thumbs_3t/12795.jpg', alt: 'Panoramica de la cordillera', height: 'h-64' },
+  { src: 'https://4kwallpapers.com/images/walls/thumbs_3t/26309.jpg', alt: 'Valle recortado en 4:3', height: 'h-64' },
+  { src: 'https://4kwallpapers.com/images/walls/thumbs_3t/4347.jpg', alt: 'Rio recortado en 1:1', height: 'h-64' }
 ] as const
 
+// picsum.photos responde 302 a fastly.picsum.photos con un hmac en la query,
+// asi que la URL directa no vale: hay que pasar por picsum y declarar los
+// dos hosts en image.domains, porque ipx valida el host tras el redirect.
 const avatars = [
-  { src: rio, alt: 'Ana' },
-  { src: valle, alt: 'Luis' },
-  { src: panorama, alt: 'Marta' }
+  { src: 'https://picsum.photos/id/237/400', alt: 'Ana' },
+  { src: 'https://picsum.photos/id/64/400', alt: 'Luis' },
+  { src: 'https://picsum.photos/id/870/400', alt: 'Marta' }
 ] as const
 
 const features = [
@@ -65,7 +69,7 @@ const features = [
   <UPageSection
     id="imagenes"
     title="Imágenes"
-    description="Los tres archivos de esta sección son los originales que subiste, sin procesar. El módulo hace el resto."
+    description="Las imágenes de esta sección son URLs remotas. El módulo las optimiza igual: recorta, convierte y sirve en el tamaño que pide el navegador."
     orientation="horizontal"
     :features="features"
   >
@@ -114,8 +118,8 @@ const features = [
           reserva espacio ni hace layout shift.
         -->
         <NuxtImg
-          :src="panorama"
-          alt="Carga con placeholder"
+          :src="placeholder.src"
+          :alt="placeholder.alt"
           :placeholder="PLACEHOLDER"
           width="256"
           height="160"

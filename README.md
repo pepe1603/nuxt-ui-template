@@ -177,28 +177,27 @@ Respeta `prefers-reduced-motion`: cada animación declara su propio reset de
 
 ## Imágenes
 
-`@nuxt/image` con **ipx**, que es el proveedor por defecto: optimiza en local,
-sin cuentas ni claves de API. Subes el archivo tal cual y el módulo recorta,
-convierte y sirve lo que el navegador pide.
+`@nuxt/image` con **ipx**, el proveedor por defecto. El src es una URL absoluta:
+las imágenes no se sirven desde este proyecto, ipx las descarga, las recorta y
+sirve la variante que pide el navegador.
 
 ```vue
 <script setup lang="ts">
-import foto from '~/assets/images/foto.jpg'
+const foto = {
+  src: 'https://ejemplo.com/foto.jpg',
+  alt: 'Lo que muestra'
+}
 </script>
 
 <template>
   <NuxtImg
-    :src="foto"
-    alt="Lo que muestra"
+    :src="foto.src"
+    :alt="foto.alt"
     sizes="100vw sm:50vw lg:33vw"
     loading="lazy"
   />
 </template>
 ```
-
-Importar el archivo y pasar la variable (no la ruta como string) es lo que
-permite que el bundler lo resuelva: con la ruta escrita a mano, ipx no la
-encuentra.
 
 | Componente | Para qué |
 | --- | --- |
@@ -208,19 +207,40 @@ encuentra.
 
 `sizes` describe el ancho que la imagen ocupa **en cada breakpoint**, no el de
 la ventana. Es lo que permite a ipx generar candidatos que encajan con el
-layout: `lg:33vw` genera el ancho que ocupa una de tres columnas, no un tercio
-de pantalla completo.
+layout: `lg:33vw` genera el ancho de una de tres columnas, no un tercio de
+pantalla completo.
 
-Los tres archivos de `app/assets/images/` son imágenes de relleno generadas
-para la demo, no fotos: sustitúyelas por las tuyas y el markup no cambia.
+### El host tiene que estar en `image.domains`
 
-### Dos cosas que rompen sin aviso
+En `nuxt.config.ts`:
+
+```ts
+image: {
+  domains: ['4kwallpapers.com', 'picsum.photos', 'fastly.picsum.photos']
+}
+```
+
+Sin esa lista la imagen **se ve igual y no da ningún error**: @nuxt/image
+comprueba el host, no lo encuentra, y devuelve la URL original sin pasar por
+ipx. Te queda sin `srcset`, sin avif y sin placeholder, sin avisar.
+
+Dos detalles que no son obvios:
+
+- Va el **host**, no la URL: `4kwallpapers.com`, nunca `https://4kwallpapers.com/...`.
+- Si el host redirige, declara también el destino. `picsum.photos` responde 302
+  a `fastly.picsum.photos` e ipx valida el host **después** del redirect, así que
+  con uno solo los avatares devuelven `IPX_FORBIDDEN_HOST`.
+
+ipx descarga en el servidor, así que tu despliegue necesita salida a internet y
+los hosts que bloquean por hotlink o por User-Agent no sirven.
+
+### Dos cosas más que rompen sin aviso
 
 **`placeholder` como string se lee como URL.** Hay que pasarle un número o un
 array:
 
 ```vue
-<NuxtImg :src="foto" :placeholder="[32, 32, 20]" />
+<NuxtImg :src="foto.src" :placeholder="[32, 32, 20]" />
 ```
 
 Con `placeholder="32"` el atributo `src` acaba siendo literalmente `32`, que
@@ -243,7 +263,7 @@ trabajo se quedan en local. Ver [CONTRIBUTING.md](./CONTRIBUTING.md).
 - `app/app.vue` — nombre del proyecto en el header y footer, enlaces sociales
 - `app/app.config.ts` — color de marca
 - `app/assets/css/main.css` — neutros, superficies, tipografía
-- `app/assets/images/` — imágenes que optimiza `@nuxt/image`
+- `nuxt.config.ts` — dominios remotos permitidos por `@nuxt/image`
 - `app/pages/index.vue` — esta página es documentación del sistema; elimínala al iniciar un proyecto
 - Imágenes sociales (ogImage): coloca la tuya en `public/` y descomenta la línea en `app/app.vue`
 

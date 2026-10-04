@@ -46,6 +46,12 @@ export default defineNuxtConfig({
   // externos: recorta, convierte y sirve la imagen ya ajustada al srcset.
   image: {
     quality: 80,
-    format: ['avif', 'webp']
+    format: ['avif', 'webp'],
+    // Sin esta lista, una URL absoluta se devuelve tal cual sin pasar por ipx:
+    // la imagen se ve igual, pero sin srcset, sin avif y sin placeholder, y
+    // ningun aviso en consola. El host tiene que ir aqui, no la URL entera.
+    // picsum.photos responde 302 a fastly.picsum.photos e ipx valida el host
+    // despues del redirect, asi que van los dos.
+    domains: ['4kwallpapers.com', 'picsum.photos', 'fastly.picsum.photos']
   }
 })

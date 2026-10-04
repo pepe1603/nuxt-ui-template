@@ -38,7 +38,7 @@ const ui = {
 <template>
   <UPageSection
     title="Las ocho animaciones"
-    description="Cada tarjeta se revela con una animación distinta. Cambia el valor de animation y el bloque se comporta distinto sin tocar una sola regla de IntersectionObserver."
+    description="Cada tarjeta se revela con una animación distinta. Cambia el valor de animation y el bloque se comporta distinto sin tocar el componente: son variantes declaradas en utils/motion.ts."
     :ui="ui"
   >
     <RevealOnScroll

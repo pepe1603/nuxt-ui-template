@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // Demo de entrar y salir. once=false (el default) hace que cada bloque
 // reaparezca cada vez que vuelve a entrar en pantalla, asi que hay que
-// bajar, subir y bajar otra vez para verlo.
+// bajar, subir y bajar otra vez para verlo. Quien revierte es Motion: el
+// `whileInView` se deshace solo al salir del viewport, sin observer propio.
 //
 // Los bloques son altos a proposito: un elemento mas pequeño que el viewport
 // se ve entrar y salir pegado al borde, que no demuestra nada. Con bloques

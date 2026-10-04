@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Cada tarjeta monta su RevealOnScroll con un :key propio. Al pulsar replay
-// solo cambia el key, Vue destruye el nodo viejo y crea uno nuevo, y el
-// observer vuelve a empezar en false: es la unica forma de ver la animacion
+// solo cambia el key, Vue destruye el nodo viejo y crea uno nuevo, y Motion
+// vuelve a aplicar el estado inicial: es la unica forma de ver la animacion
 // repetida sin tener que salirse de la seccion.
 const replays = reactive<Record<string, number>>({
   together: 0,
@@ -47,7 +47,7 @@ const ui = {
 <template>
   <UPageSection
     title="Cadenas de entrada"
-    description="Dentro de una misma entrada, cada propiedad puede esperar su turno. Es lo que separa un tween de una secuencia, y se ve sin necesidad de scrollear."
+    description="Dentro de una misma entrada, cada propiedad puede esperar su turno. Es lo que separa un tween de una secuencia, y se ve sin necesidad de scrollear. El retardo por propiedad es un objeto `transition`, no una lista de milisegundos en el style."
     :ui="ui"
   >
     <div class="grid gap-4 lg:grid-cols-3">
@@ -73,7 +73,7 @@ const ui = {
 
         <div class="flex flex-col gap-1.5">
           <div
-            v-for="(property, i) in revealProperties"
+            v-for="(property, i) in revealChain"
             :key="property"
             class="flex items-center gap-2 text-xs"
           >

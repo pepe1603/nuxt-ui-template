@@ -53,7 +53,7 @@ useSeoMeta({
       <RepeatSection />
     </RevealOnScroll>
 
-    <RevealOnScroll animation="fade-up">
+    <RevealOnScroll animation="blur">
       <ImagesSection />
     </RevealOnScroll>
   </UPage>

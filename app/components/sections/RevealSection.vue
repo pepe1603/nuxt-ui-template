@@ -4,13 +4,13 @@
 const features = [
   {
     icon: 'i-lucide-eye',
-    title: 'useIntersectionObserver',
-    description: 'Devuelve un booleano. No sabe nada de estilos: solo decide si el bloque ya entró en pantalla.'
+    title: 'whileInView',
+    description: 'Motion observa el elemento y aplica el estado de asentado. Al salir del viewport lo revierte solo: no hay ningún observer en el código.'
   },
   {
     icon: 'i-lucide-spline',
-    title: 'Transición CSS',
-    description: 'opacity, translate, scale y timing salen de utilidades de Tailwind. Duración y retardo llegan por style inline.'
+    title: 'Variantes',
+    description: 'Los estados son objetos tipados en utils/motion.ts, no clases. El retardo de cada propiedad va en `transition`, que acepta un retardo por clave.'
   },
   {
     icon: 'i-lucide-repeat',
@@ -20,7 +20,7 @@ const features = [
   {
     icon: 'i-lucide-accessibility',
     title: 'Accesibilidad',
-    description: 'motion-reduce anula translate, scale y blur sin tocar la lógica, así que no hace falta leer la media query en JS.'
+    description: 'El `<MotionConfig reduced-motion="user">` de app.vue hace que Motion descarte transform y layout y deje pasar solo opacity. Sin ese nodo, esta animación no lo respeta.'
   }
 ]
 
@@ -36,7 +36,7 @@ const ui = {
 <template>
   <UPageSection
     title="RevealOnScroll"
-    description="VueUse decide cuándo, Tailwind decide cómo. Ninguna de las dos capas conoce a la otra."
+    description="Motion decide cuándo y cómo a la vez. No hay IntersectionObserver ni clases de animación en el componente: solo variantes."
     :features="features"
     :links="links"
     :ui="ui"

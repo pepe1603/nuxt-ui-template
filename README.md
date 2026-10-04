@@ -148,8 +148,8 @@ duplica el rol de encabezado.
 
 ### `RevealOnScroll`
 
-Revela un bloque al entrar en pantalla. VueUse decide *cuándo* y Tailwind
-decide *cómo*; ninguna de las dos capas conoce a la otra.
+Revela un bloque al entrar en pantalla, con `whileInView` de **motion-v**. No
+hay IntersectionObserver en el código: quien decide cuándo es Motion.
 
 ```vue
 <RevealOnScroll animation="fade-up" :delay="100">
@@ -165,15 +165,62 @@ decide *cómo*; ninguna de las dos capas conoce a la otra.
 | `duration` | milisegundos | `700` |
 | `delay` | milisegundos | `0` |
 | `once` | booleano | `false` |
+| `amount` | `some`, `all`, o un número | `some` |
+| `margin` | margen del viewport, tipo `'-12% 0px -12% 0px'` | `'-12% 0px -12% 0px'` |
 
 Con `once: false` el bloque se oculta al salir de la pantalla y vuelve a
-animarse cada vez que regresa. `sequence` encadena las propiedades dentro de una
-misma entrada —primero la opacidad, después el desplazamiento— y la salida se
-resuelve más rápido y sin encadenar. La coreografía está en
-`app/utils/reveal.ts`.
+animarse cada vez que regresa: lo revierte Motion al salir del viewport. La
+entrada y la salida usan ahora la misma transición; antes la salida era un 45 %
+más corta, porque en CSS eso era un `transition-duration` aparte.
 
-Respeta `prefers-reduced-motion`: cada animación declara su propio reset de
-`motion-reduce`, sin tocar la lógica.
+`sequence` encadena las propiedades dentro de una misma entrada —primero la
+opacidad, después el desplazamiento—. El retardo de cada paso no es una lista de
+milisegundos en el `style`, sino el `transition` de motion, que acepta un
+retardo por clave. Todo está en `app/utils/motion.ts`, fuera del componente,
+para que la página de ejemplo muestre los números reales y no copias.
+
+### `prefers-reduced-motion` no es automático
+
+Lo resuelve **un único nodo** en `app/app.vue`:
+
+```vue
+<MotionConfig reduced-motion="user">
+```
+
+Con eso Motion descarta `transform` y `layout` y deja pasar solo `opacity` y
+color. Sin ese nodo, ninguna animación de la app respeta la preferencia del
+sistema y no salta ningún error, así que **si añades un `MotionConfig` o
+cambias la app, comprueba que sigue ahí**.
+
+### Lo que CSS no hace
+
+La sección `MotionSection` demuestra lo que necesita un motor de animación y
+no una transición: resortes, escalonado, exit y gestos.
+
+```vue
+<Motion
+  :while-hover="{ y: -6, scale: 1.02 }"
+  :while-press="{ scale: 0.98 }"
+  :transition="{ type: 'spring', stiffness: 260, damping: 20 }"
+>
+  <div class="bg-elevated border border-default p-5">…</div>
+</Motion>
+```
+
+| Pieza | Para qué |
+| --- | --- |
+| `while-hover`, `while-press`, `while-drag` | Estados que se montan y se limpian solos |
+| `transition: { type: 'spring' }` | `duration` dice cuánto tarda; el resorte dice cómo se llega y se adapta a la distancia |
+| `staggerChildren` en el padre | Escalonar hijos sin escribir un retardo por índice |
+| `AnimatePresence` | Animar la salida: sin él, Vue ya destruyó el nodo y no hay nada que animar |
+| `drag`, `dragConstraints`, `dragElastic` | Gestos. `dragConstraints` **no** es opcional: sin él el elemento se sale de la página |
+
+La regla que evita los conflictos con Nuxt UI: **la animación va en un elemento
+propio**, nunca sobre un `UButton` o un `USlideover`. Nuxt UI y Reka UI ya
+mueven sus nodos internos con transiciones CSS, y dos transiciones en el mismo
+elemento significa que gana la última que se escribió, sin avisar. Por eso los
+hover de la sección viven en el `div` que envuelve a la tarjeta, y el `UButton`
+de dentro es solo contenido.
 
 ## Imágenes
 
@@ -263,6 +310,7 @@ trabajo se quedan en local. Ver [CONTRIBUTING.md](./CONTRIBUTING.md).
 - `app/app.vue` — nombre del proyecto en el header y footer, enlaces sociales
 - `app/app.config.ts` — color de marca
 - `app/assets/css/main.css` — neutros, superficies, tipografía
+- `app/utils/motion.ts` — estados y coreografía de las animaciones
 - `nuxt.config.ts` — dominios remotos permitidos por `@nuxt/image`
 - `app/pages/index.vue` — esta página es documentación del sistema; elimínala al iniciar un proyecto
 - Imágenes sociales (ogImage): coloca la tuya en `public/` y descomenta la línea en `app/app.vue`
@@ -278,3 +326,4 @@ modificas la plantilla, no tenés que publicar los cambios.
 - [Tailwind CSS v4](https://tailwindcss.com)
 - [Nuxt Fonts](https://nuxt.com/modules/fonts)
 - [Nuxt Image](https://nuxt.com/modules/image)
+- [Motion for Vue](https://motion-vue.dev)

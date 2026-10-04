@@ -175,6 +175,64 @@ resuelve más rápido y sin encadenar. La coreografía está en
 Respeta `prefers-reduced-motion`: cada animación declara su propio reset de
 `motion-reduce`, sin tocar la lógica.
 
+## Imágenes
+
+`@nuxt/image` con **ipx**, que es el proveedor por defecto: optimiza en local,
+sin cuentas ni claves de API. Subes el archivo tal cual y el módulo recorta,
+convierte y sirve lo que el navegador pide.
+
+```vue
+<script setup lang="ts">
+import foto from '~/assets/images/foto.jpg'
+</script>
+
+<template>
+  <NuxtImg
+    :src="foto"
+    alt="Lo que muestra"
+    sizes="100vw sm:50vw lg:33vw"
+    loading="lazy"
+  />
+</template>
+```
+
+Importar el archivo y pasar la variable (no la ruta como string) es lo que
+permite que el bundler lo resuelva: con la ruta escrita a mano, ipx no la
+encuentra.
+
+| Componente | Para qué |
+| --- | --- |
+| `NuxtImg` | Una sola fuente, con `srcset` responsive |
+| `NuxtPicture` | Varios formatos (`avif`, `webp`) con fallback automático |
+| `UAvatar` y el resto de Nuxt UI | Ya usan `NuxtImg` por debajo, basta con pasar `src` |
+
+`sizes` describe el ancho que la imagen ocupa **en cada breakpoint**, no el de
+la ventana. Es lo que permite a ipx generar candidatos que encajan con el
+layout: `lg:33vw` genera el ancho que ocupa una de tres columnas, no un tercio
+de pantalla completo.
+
+Los tres archivos de `app/assets/images/` son imágenes de relleno generadas
+para la demo, no fotos: sustitúyelas por las tuyas y el markup no cambia.
+
+### Dos cosas que rompen sin aviso
+
+**`placeholder` como string se lee como URL.** Hay que pasarle un número o un
+array:
+
+```vue
+<NuxtImg :src="foto" :placeholder="[32, 32, 20]" />
+```
+
+Con `placeholder="32"` el atributo `src` acaba siendo literalmente `32`, que
+devuelve un 404. Y el array se queda en `[width, height, quality]`: una cuarta
+posición emite `b_<valor>`, que ipx lee como color de fondo y espera un color,
+así que la imagen responde 400.
+
+**Nada de `prerender`.** El handler que sirve `/_ipx` viaja en el server de
+Nitro. Si prerenderizas las rutas, nitro emite output estático, no queda
+runtime y todas las variantes devuelven 404. Para seguir desplegando estático
+hay que cambiar a un proveedor cloud en `nuxt.config.ts`.
+
 ## Flujo de trabajo
 
 `main` solo recibe releases, `develop` es el punto de integración y las ramas de
@@ -185,6 +243,7 @@ trabajo se quedan en local. Ver [CONTRIBUTING.md](./CONTRIBUTING.md).
 - `app/app.vue` — nombre del proyecto en el header y footer, enlaces sociales
 - `app/app.config.ts` — color de marca
 - `app/assets/css/main.css` — neutros, superficies, tipografía
+- `app/assets/images/` — imágenes que optimiza `@nuxt/image`
 - `app/pages/index.vue` — esta página es documentación del sistema; elimínala al iniciar un proyecto
 - Imágenes sociales (ogImage): coloca la tuya en `public/` y descomenta la línea en `app/app.vue`
 
@@ -198,3 +257,4 @@ modificas la plantilla, no tenés que publicar los cambios.
 - [Nuxt UI](https://ui.nuxt.com)
 - [Tailwind CSS v4](https://tailwindcss.com)
 - [Nuxt Fonts](https://nuxt.com/modules/fonts)
+- [Nuxt Image](https://nuxt.com/modules/image)

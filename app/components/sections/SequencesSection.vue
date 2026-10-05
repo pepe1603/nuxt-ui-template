@@ -16,7 +16,7 @@ function replay(name: string) {
 // Las tarjetas animan con DEMO_DURATION, asi que la tabla de retardos sale
 // de revealSteps() con ese mismo valor. Si se cambia la duracion aqui, los
 // numeros de la tabla se corrigen solos.
-const DEMO_DURATION = 900
+const DEMO_DURATION = 600
 
 const sequences = [
   {

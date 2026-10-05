@@ -41,6 +41,8 @@ const props = withDefaults(defineProps<{
   /** Como se encadenan las propiedades dentro de una misma entrada. */
   sequence?: RevealSequence
   /** false = reaparece cada vez que vuelve a entrar. true = solo la 1a vez. */
+  /**  Por defecto true: con false, un scroll normal hace entrar y salir
+   *  bloques seguidos y la pagina se lee como que va a destiempo. */
   once?: boolean
   /** Fraccion del elemento visible para disparar: `some`, `all` o un numero. */
   amount?: 'some' | 'all' | number
@@ -49,10 +51,10 @@ const props = withDefaults(defineProps<{
 }>(), {
   animation: 'fade-up',
   easing: 'soft',
-  duration: 700,
+  duration: 450,
   delay: 0,
   sequence: 'staged',
-  once: false,
+  once: true,
   amount: 'some',
   margin: '-12% 0px -12% 0px'
 })

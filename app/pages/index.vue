@@ -68,5 +68,9 @@ useSeoMeta({
     <RevealOnScroll animation="from-right">
       <ToastSection />
     </RevealOnScroll>
+
+    <RevealOnScroll animation="zoom-in">
+      <ModalSection />
+    </RevealOnScroll>
   </UPage>
 </template>

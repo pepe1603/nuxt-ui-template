@@ -21,6 +21,21 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  ui: {
+    experimental: {
+      // componentDetection activa el recorte de temas: Nuxt UI escanea que
+      // componentes se usan de verdad y solo genera el CSS de esos. Con
+      // `true` no haria falta la lista; el array la completa con los que
+      // se usan de forma dinamica y el escaner no puede ver.
+      //
+      // 'Modal' va aqui porque AppModal.vue lo envuelve, pero envuelto no
+      // cuenta como dinamico: es una referencia estatica y el escaner la
+      // ve. Se deja de forma explicita para que el tema de Modal no
+      // dependa de que la seccion que lo usa siga en la pagina.
+      componentDetection: ['Modal']
+    }
+  },
+
   // A proposito no hay routeRules con prerender: prerenderear '/' hace que
   // nitro emita solo output estatico, y en estatico no hay runtime que sirva
   // las variantes de ipx, asi que /_ipx daba 404. Con SSR el handler de ipx

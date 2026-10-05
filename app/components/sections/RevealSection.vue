@@ -4,23 +4,23 @@
 const features = [
   {
     icon: 'i-lucide-eye',
-    title: 'whileInView',
-    description: 'Motion observa el elemento y aplica el estado de asentado. Al salir del viewport lo revierte solo: no hay ningún observer en el código.'
+    title: 'visibleOnce',
+    description: 'La librería registra el observer al montar. Este componente solo declara el estado inicial y el de entrada, así que no hay lógica que se pueda desincronizar del SSR.'
   },
   {
     icon: 'i-lucide-spline',
-    title: 'Variantes',
-    description: 'Los estados son objetos tipados en utils/motion.ts, no clases. El retardo de cada propiedad va en `transition`, que acepta un retardo por clave.'
+    title: 'initial + visible',
+    description: 'Los estados son utilidades de Tailwind declaradas en utils/motion.ts. El typecheck cubre los nombres, así que una animación mal escrita falla al compilar y no en el DOM.'
   },
   {
     icon: 'i-lucide-repeat',
     title: 'once',
-    description: 'false (default) hace que el bloque reaparezca cada vez que vuelve a entrar. true lo deja fijo en su sitio.'
+    description: 'true (default) usa visibleOnce y solo entra la primera vez. false usa visible y reaparece cada vez que vuelve a entrar.'
   },
   {
     icon: 'i-lucide-accessibility',
     title: 'Accesibilidad',
-    description: 'El `<MotionConfig reduced-motion="user">` de app.vue hace que Motion descarte transform y layout y deje pasar solo opacity. Sin ese nodo, esta animación no lo respeta.'
+    description: 'prefers-reduced-motion se resuelve en CSS, en main.css. No hay ningún nodo del árbol que mantener: si se olvida, la animación sigue funcionando y no rompe nada.'
   }
 ]
 
@@ -36,7 +36,7 @@ const ui = {
 <template>
   <UPageSection
     title="RevealOnScroll"
-    description="Motion decide cuándo y cómo a la vez. No hay IntersectionObserver ni clases de animación en el componente: solo variantes."
+    description="VueUse decide cuándo, Tailwind decide cómo. Ninguna de las dos capas conoce a la otra, y no hay un solo nodo del que dependa que las animaciones se respeten."
     :features="features"
     :links="links"
     :ui="ui"

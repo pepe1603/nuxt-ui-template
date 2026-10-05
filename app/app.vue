@@ -28,6 +28,11 @@ useHead({
 // ======================================================================
 
 const toaster = useToasterOptions()
+
+// El boton de buscar y la paleta comparten este estado. Vive en
+// utils/commandPalette.ts porque lo consumen dos componentes distintos, y
+// por eso no puede ser un ref local de ninguno de los dos.
+const isCommandPaletteOpen = useCommandPalette()
 </script>
 
 <template>
@@ -69,6 +74,16 @@ const toaster = useToasterOptions()
       </template>
 
       <template #right>
+        <!-- Abre la paleta global. Es el mismo estado que el atajo
+             ⌘K / Ctrl+K, asi que los dos caminos hacen lo mismo. -->
+        <UButton
+          icon="i-lucide-search"
+          aria-label="Buscar"
+          color="neutral"
+          variant="ghost"
+          @click="isCommandPaletteOpen = true"
+        />
+
         <UColorModeButton />
 
         <UButton
@@ -102,4 +117,17 @@ const toaster = useToasterOptions()
       </template>
     </UFooter>
   </UApp>
+
+  <!--
+    Va aqui y FUERA de UPage, al final del template.
+
+    Fuera de UPage porque es global: si viviera dentro, solo habria paleta
+    en la pagina actual. Y al final para que en el orden del DOM quede
+    despues del contenido, que es como debe estar una capa que se abre
+    encima de todo.
+
+    No hace falta ningun <ClientOnly>: el modal no se pinta hasta que se
+    abre, asi que en el servidor no hay nada que hydratear.
+  -->
+  <AppCommandPalette />
 </template>

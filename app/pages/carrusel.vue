@@ -75,69 +75,96 @@ const slides = [
     to: '#'
   }
 ]
-
-const header = {
-  title: 'Carrusel',
-  description: 'UCarousel no tiene prop para cuántas tarjetas se ven: se decide con basis de Tailwind en el slot item. basis-full es una, basis-1/2 son dos, basis-1/3 son tres, y se combinan con sm: y lg:.'
-}
 </script>
 
 <template>
   <UPage>
-    <UPageHeader
-      :title="header.title"
-      :description="header.description"
-    />
+    <!--
+      El header va con animation="fade" y once: esta por encima del fold,
+      asi que el observer dispara en el primer frame y cualquier
+      desplazamiento se lee como una carga, no como una entrada. `fade` no
+      mueve nada, solo cambia la opacidad.
+
+      Y NO lleva HeroSection aqui, aunque lo lleve la portada: sus enlaces
+      apuntan a #texto, que es una seccion del indice. En /carrusel ese ancla
+      no lleva a ninguna parte.
+    -->
+    <RevealOnScroll
+      animation="fade"
+      once
+    >
+      <UPageHeader
+        title="Carrusel"
+        description="UCarousel no tiene prop para cuántas tarjetas se ven: se decide con basis de Tailwind en el slot item. basis-full es una, basis-1/2 son dos, basis-1/3 son tres, y se combinan con sm: y lg:."
+      />
+    </RevealOnScroll>
 
     <UPageBody>
       <div class="flex flex-col gap-10">
-        <section class="flex flex-col gap-4">
-          <div class="flex flex-col gap-1">
-            <h2 class="text-highlighted font-semibold">
-              Una tarjeta a la vez
-            </h2>
+        <!--
+          Cada seccion va en su propio RevealOnScroll, y no el contenedor
+          entero, por una razon concreta: si el wrapper fuera el div de las
+          gap-10, los dos carruseles saldrian a la vez al llegar la
+          animacion. Envolviendo cada bloque, cada uno entra cuando llega.
 
-            <p class="text-muted text-sm">
-              El default del wrapper:
-              <code class="text-primary">perView="basis-full"</code>. Es el
-              carrusel clásico, y el que vale para una portada.
-            </p>
-          </div>
+          Y sin `blur` alrededor: blur deja filter en el estado visible y
+          un filter crea bloque contenedor para los fixed. El carrusel mide
+          su posicion con el observer de Embla, que mide del getBoundingClientRects
+          al padre, y con un ancestro transformado las medidas salen rareadas.
+        -->
+        <RevealOnScroll animation="fade-up">
+          <section class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+              <h2 class="text-highlighted font-semibold">
+                Una tarjeta a la vez
+              </h2>
 
-          <AppCarousel
-            :items="slides"
-            :interval="4000"
+              <p class="text-muted text-sm">
+                El default del wrapper:
+                <code class="text-primary">perView="basis-full"</code>. Es el
+                carrusel clásico, y el que vale para una portada.
+              </p>
+            </div>
+
+            <AppCarousel
+              :items="slides"
+              :interval="4000"
+            />
+          </section>
+        </RevealOnScroll>
+
+        <RevealOnScroll animation="zoom-in">
+          <section class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+              <h2 class="text-highlighted font-semibold">
+                Tres a la vez en escritorio
+              </h2>
+
+              <p class="text-muted text-sm">
+                Con
+                <code class="text-primary">basis-full sm:basis-1/2 lg:basis-1/3</code>.
+                En móvil sigue siendo una tarjeta entera, porque
+                <code class="text-primary">basis-full</code> va sin breakpoint.
+              </p>
+            </div>
+
+            <AppCarousel
+              :items="slides"
+              per-view="basis-full sm:basis-1/2 lg:basis-1/3"
+              :interval="3000"
+            />
+          </section>
+        </RevealOnScroll>
+
+        <RevealOnScroll animation="fade-up">
+          <UAlert
+            color="neutral"
+            variant="subtle"
+            icon="i-lucide-info"
+            title="Dónde está cada cosa"
+            description="El ancho, en el prop perView. El ritmo, en interval, que por dentro es autoplay.delay de Embla. Las flechas y los dots, en arrows y dots. El ancho de la caja, en w-full overflow-hidden de la raíz."
           />
-        </section>
-
-        <section class="flex flex-col gap-4">
-          <div class="flex flex-col gap-1">
-            <h2 class="text-highlighted font-semibold">
-              Tres a la vez en escritorio
-            </h2>
-
-            <p class="text-muted text-sm">
-              Con
-              <code class="text-primary">basis-full sm:basis-1/2 lg:basis-1/3</code>.
-              En móvil sigue siendo una tarjeta entera, porque
-              <code class="text-primary">basis-full</code> va sin breakpoint.
-            </p>
-          </div>
-
-          <AppCarousel
-            :items="slides"
-            per-view="basis-full sm:basis-1/2 lg:basis-1/3"
-            :interval="3000"
-          />
-        </section>
-
-        <UAlert
-          color="neutral"
-          variant="subtle"
-          icon="i-lucide-info"
-          title="Dónde está cada cosa"
-          description="El ancho, en el prop perView. El ritmo, en interval, que por dentro es autoplay.delay de Embla. Las flechas y los dots, en arrows y dots. El ancho de la caja, en w-full overflow-hidden de la raíz."
-        />
+        </RevealOnScroll>
       </div>
     </UPageBody>
   </UPage>

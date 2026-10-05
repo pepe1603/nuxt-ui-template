@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// Demo de entrar y salir. Es la unica seccion que pone `once=false`, y con
-// ella la variante `visible` en vez de `visibleOnce`: el bloque se oculta al
-// salir del viewport y vuelve a animarse cada vez que regresa, asi que hay
-// que bajar, subir y bajar otra vez. En el resto de la pagina `once` es true,
-// porque con false un scroll normal hace entrar y salir bloques seguidos y la
-// pagina se lee como que va a destiempo.
+// Demo de entrar y salir. once=false (el default) hace que cada bloque
+// reaparezca cada vez que vuelve a entrar en pantalla, asi que hay que
+// bajar, subir y bajar otra vez para verlo.
 //
 // Los bloques son altos a proposito: un elemento mas pequeño que el viewport
 // se ve entrar y salir pegado al borde, que no demuestra nada. Con bloques
@@ -32,8 +29,18 @@ const blocks = [
     text: 'Empieza un 10% más grande y se asienta. Útil para tarjetas que quieres que destaquen al entrar.'
   },
   {
+    animation: 'blur',
+    easing: 'soft',
+    icon: 'i-lucide-focus',
+    title: 'Entra desenfocando',
+    text: 'El desenfoque es el único animation que deja un filter en el estado visible. Ojo con meterle un fixed dentro.'
+  },
+  {
     animation: 'fade-down',
     easing: 'back',
+    // AVISO: el icono NO es `i-lucide-bounce`. Ese es de Feather, no de Lucide,
+    // y no existe en la coleccion: @nuxt/icon lo resolvia con un warning en
+    // cada render de la pagina. Lucide tiene `arrow-down-up`.
     icon: 'i-lucide-arrow-down-up',
     title: 'Con curva back',
     text: 'La curva cubic-bezier(0.34,1.4,0.64,1) se pasa de su destino y vuelve. Se nota al entrar, no al salir.'
@@ -48,7 +55,7 @@ const ui = {
 <template>
   <UPageSection
     title="Entrar y salir"
-    description="Con once=false el bloque se oculta al dejar la pantalla y vuelve a animarse cada vez que regresa. Es la variante visible en vez de visibleOnce, y es lo más caro de la lista: en el resto de la página once=true. Baja, sube y vuelve a bajar para verlo."
+    description="Con once=false —el default— el bloque se oculta al dejar la pantalla y vuelve a animarse cada vez que regresa. Baja, sube y vuelve a bajar para verlo."
     :ui="ui"
   >
     <div class="flex flex-col gap-6">
@@ -57,8 +64,8 @@ const ui = {
         :key="block.title"
         :animation="block.animation"
         :easing="block.easing"
+        :duration="750"
         :delay="index * 60"
-        :once="false"
       >
         <div class="flex min-h-72 flex-col items-start justify-center gap-3 rounded-xl bg-muted border border-default p-8">
           <div class="bg-primary/10 text-primary flex size-11 items-center justify-center rounded-lg">

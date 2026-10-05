@@ -18,13 +18,6 @@ useHead({
 </script>
 
 <template>
-  <!--
-    No hay MotionConfig ni nada equivalente: con @vueuse/motion la
-    preferencia del sistema se respeta en CSS, con transition-property y
-    transition-duration en motion-reduce. Se resuelve en app/assets/css/main.css
-    y no en un nodo del arbol, asi que no se puede olvidar al anadir una
-    animacion nueva.
-  -->
   <UApp>
     <UHeader>
       <template #left>

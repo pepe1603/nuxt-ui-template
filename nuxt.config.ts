@@ -5,8 +5,7 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxt/fonts',
     '@nuxt/image',
-    '@vueuse/nuxt',
-    '@vueuse/motion/nuxt'
+    '@vueuse/nuxt'
   ],
 
   // Sin pathPrefix, una seccion en components/sections/HeroSection.vue se

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// Demo de entrar y salir. Es la seccion que pone `once=false` a proposito:
-// el default de RevealOnScroll es true, y en el resto de la pagina no hace
-// falta, porque con false un scroll normal hace entrar y salir bloques
-// seguidos y la pagina se lee como que va a destiempo. Aqui si se quiere,
-// asi que hay que bajar, subir y bajar otra vez para verlo. Quien revierte
-// es Motion: el `whileInView` se deshace solo al salir del viewport.
+// Demo de entrar y salir. Es la unica seccion que pone `once=false`, y con
+// ella la variante `visible` en vez de `visibleOnce`: el bloque se oculta al
+// salir del viewport y vuelve a animarse cada vez que regresa, asi que hay
+// que bajar, subir y bajar otra vez. En el resto de la pagina `once` es true,
+// porque con false un scroll normal hace entrar y salir bloques seguidos y la
+// pagina se lee como que va a destiempo.
 //
 // Los bloques son altos a proposito: un elemento mas pequeño que el viewport
 // se ve entrar y salir pegado al borde, que no demuestra nada. Con bloques
@@ -32,13 +32,6 @@ const blocks = [
     text: 'Empieza un 10% más grande y se asienta. Útil para tarjetas que quieres que destaquen al entrar.'
   },
   {
-    animation: 'blur',
-    easing: 'soft',
-    icon: 'i-lucide-focus',
-    title: 'Entra desenfocando',
-    text: 'El desenfoque es el único animation que deja un filter en el estado visible. Ojo con meterle un fixed dentro.'
-  },
-  {
     animation: 'fade-down',
     easing: 'back',
     icon: 'i-lucide-arrow-down-up',
@@ -55,7 +48,7 @@ const ui = {
 <template>
   <UPageSection
     title="Entrar y salir"
-    description="Con once=false el bloque se oculta al dejar la pantalla y vuelve a animarse cada vez que regresa. Es el comportamiento más caro de la lista: en el resto de la página once=true. Baja, sube y vuelve a bajar para verlo."
+    description="Con once=false el bloque se oculta al dejar la pantalla y vuelve a animarse cada vez que regresa. Es la variante visible en vez de visibleOnce, y es lo más caro de la lista: en el resto de la página once=true. Baja, sube y vuelve a bajar para verlo."
     :ui="ui"
   >
     <div class="flex flex-col gap-6">
@@ -64,7 +57,6 @@ const ui = {
         :key="block.title"
         :animation="block.animation"
         :easing="block.easing"
-        :duration="500"
         :delay="index * 60"
         :once="false"
       >

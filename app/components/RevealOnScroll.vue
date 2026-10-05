@@ -1,88 +1,66 @@
 <script setup lang="ts">
 // ======================================================================
 // REVEAL ON SCROLL
-// Unica pieza de animacion de la plantilla, sobre motion-v.
+// Unica pieza de animacion de la plantilla, sobre @vueuse/motion.
 //
-// Antes el observer era mio y el "como" eran clases de Tailwind. Ahora las
-// dos cosas las hace Motion: `whileInView` dispara, y los estados son
-// variantes. No queda IntersectionObserver en el codigo.
+// El observer es useIntersectionObserver de VueUse y lo registra la
+// libreria al montar, asi que este componente no observa nada: solo
+// declara el estado inicial y el de entrada. No hay logica que mantener
+// aqui, y por eso no hay forma de que se desincronice del SSR.
 //
-// AVISO 1: los estados de `hiddenState` y `shownState` viven en utils/motion
-// y son claves de variant tipadas. Un error de nombre falla el typecheck,
-// que es la red que sustituye a la de las clases de antes.
+// AVISO 1: el estado inicial va en la variante `initial`, no en una clase
+// de CSS. Al revés de lo que parece: si el estado inicial fuera una clase
+// del elemento, el servidor lo pintaria y el bloque llegaria invisible a
+// la primera pantalla, quedandose en un hueco hasta que hidrata. Con la
+// variante, el HTML llega visible y la animacion solo ocurre si el bloque
+// esta de verdad fuera de la pantalla al cargar.
 //
-// AVISO 2: reduced motion NO es automatico. Lo resuelve el
-// `<MotionConfig reducedMotion="user">` de app.vue, que hace falta para
-// toda la app. Sin ese nodo, estas animaciones se mueven igual.
-// `reducedMotion="user"` deja pasar opacity y descarta transform y layout,
-// que es el equivalente a los `motion-reduce:translate-none` de antes.
+// AVISO 2: `once: true` usa visibleOnce y `once: false` usa visible. No es
+// un parametro que la libreria interprete: son dos variantes distintas, y
+// por eso el nombre del prop se llama `once` y no `visible`. Con false el
+// bloque se oculta al salir del viewport y se repite al volver, que es lo
+// mas caro de la lista; por defecto es true.
 //
-// AVISO 3: `amount: 'some'` + margin negativo en vez de un umbral alto. Un
-// `amount` numerico es un ratio, y una seccion de 3000px en un viewport de
-// 800px nunca pasa de 0.26. El margin encoge el viewport que observa
-// Motion, asi que el disparo no depende de la altura del elemento.
-//
-// AVISO 4: sin JavaScript el contenido se queda en el estado inicial, que es
-// invisible. Es el mismo precio que pagaba la version con CSS, y es lo que
-// hace que SSR pinte el bloque oculto y luego lo revele. Para contenido que
-// deba verse sin JS hay que sacar la animacion de la ruta critica.
+// AVISO 3: se animan transform y opacity, nada mas. El compositor resuelve
+// esas dos sin recalcular estilos. No se anima filter: blur(), que va fuera
+// del compositor y obliga a rasterizar el elemento entero en cada frame.
+// El motivo esta escrito en app/assets/css/main.css.
 // ======================================================================
 
 const props = withDefaults(defineProps<{
   /** Desplazamiento y escalado iniciales. `fade` no mueve nada. */
   animation?: RevealAnimation
-  /** Curva de la transicion. `soft` es easeOutExpo: frena muy al final,
-   *  que es lo que hace que un movimiento se lea como suave y no brusco. */
+  /** Curva de la transicion. `soft` frena muy al final. */
   easing?: RevealEasing
   /** Duracion de la transicion en ms. */
   duration?: number
-  /** Retardo en ms, para escalonar hijos con el mismo animation. */
+  /** Retardo en ms, para escalonar con el mismo animation. */
   delay?: number
-  /** Como se encadenan las propiedades dentro de una misma entrada. */
-  sequence?: RevealSequence
-  /** false = reaparece cada vez que vuelve a entrar. true = solo la 1a vez. */
-  /**  Por defecto true: con false, un scroll normal hace entrar y salir
-   *  bloques seguidos y la pagina se lee como que va a destiempo. */
+  /** false = reaparece cada vez que vuelve a entrar. */
   once?: boolean
-  /** Fraccion del elemento visible para disparar: `some`, `all` o un numero. */
-  amount?: 'some' | 'all' | number
-  /** Margen del viewport que observa Motion. */
-  margin?: MarginType
 }>(), {
   animation: 'fade-up',
   easing: 'soft',
   duration: 450,
   delay: 0,
-  sequence: 'staged',
-  once: true,
-  amount: 'some',
-  margin: '-12% 0px -12% 0px'
+  once: true
 })
 
-// Un unico objeto por combinacion de props: motion-v compara por referencia
-// y regenerar el variant en cada rendereria reiniciaria la animacion.
-const variants = computed(() => revealVariants(
-  props.animation,
-  props.sequence,
-  props.duration,
-  props.delay,
-  props.easing
-))
-
-const inViewOptions = computed(() => ({
-  once: props.once,
-  amount: props.amount,
-  margin: props.margin
+// Un unico objeto por combinacion de props: la libreria compara las
+// variantes y regenerarlas en cada render reiniciaria la animacion.
+const variants = computed(() => revealVariants(props.animation, props.once))
+const transition = computed(() => ({
+  duration: props.duration,
+  delay: props.delay,
+  ease: easingCurves[props.easing]
 }))
 </script>
 
 <template>
-  <Motion
-    as="div"
-    :initial="variants.initial"
-    :while-in-view="variants.whileInView"
-    :in-view-options="inViewOptions"
+  <div
+    v-motion="variants"
+    :transition="transition"
   >
     <slot />
-  </Motion>
+  </div>
 </template>

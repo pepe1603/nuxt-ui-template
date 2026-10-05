@@ -1,166 +1,61 @@
 // ======================================================================
-// COREOGRAFIA DE RevealOnScroll, sobre motion-v
-// Vive aqui y no dentro del componente para que la documentacion pueda
-// mostrar los retardos reales en vez de copiarlos a mano. Cuando los
-// numeros vivian duplicados, la tabla de la pagina de ejemplo seguia
-// enseñando los de duration 700 con tarjetas de 900.
+// ESTADOS DEL REVEAL
+// Con @vueuse/motion no hay coreografia: el componente declara las
+// variantes y esta tabla dice como se ve cada una. Sin cadena de pasos,
+// sin reparto de duracion y sin transicion por propiedad, asi que no
+// existe el desfase entre el numero que dice el documento y el que
+// tarda el navegador.
+//
+// Lo que se anima son transform y opacity, las dos propiedades que el
+// compositor resuelve sin recalcular estilos. No hay filter: blur() en
+// ningun estado, y el motivo esta en main.css.
 // ======================================================================
-import type { Options, VariantType } from 'motion-v'
 
-/** El tipo de `variants` que acepta `<Motion>`, tomado del propio paquete.
- *  `Variants` de motion-dom NO encaja: incluye un TargetResolver que el
- *  prop no admite, y asignarlo aqui rompe el typecheck. */
-export type Variants = Options['variants']
-
-/** Margin del viewport que observa Motion, replicado desde el paquete: no
- *  lo exporta. Se replica a proposito, porque el typecheck de un margin
- *  mal escrito es justo lo que avisa de que el disparo no va a funcionar. */
-type MarginValue = `${number}${'px' | '%'}`
-export type MarginType = MarginValue | `${MarginValue} ${MarginValue}` | `${MarginValue} ${MarginValue} ${MarginValue}` | `${MarginValue} ${MarginValue} ${MarginValue} ${MarginValue}`
-
-export type RevealAnimation = 'fade' | 'fade-up' | 'fade-down' | 'from-left' | 'from-right' | 'zoom-in' | 'zoom-out' | 'blur'
+export type RevealAnimation = 'fade' | 'fade-up' | 'fade-down' | 'from-left' | 'from-right' | 'zoom-in' | 'zoom-out'
 export type RevealEasing = 'out' | 'in-out' | 'soft' | 'back'
-export type RevealSequence = 'together' | 'lead' | 'staged'
+/** `once` solo la primera vez; `repeat` cada vez que vuelve a entrar. */
+export type RevealOnce = boolean
 
-/** Los cuatro pasos de una entrada. Cada uno espera su turno: primero la
- *  opacidad, despues el desplazamiento, y por ultimo escala y desenfoque.
- *  Son pasos logicos, no claves CSS: `translate` abarca `x` e `y` porque
- *  una animacion solo usa una de las dos. */
-export const revealChain = ['opacity', 'translate', 'scale', 'filter'] as const
-export type RevealChainStep = typeof revealChain[number]
+/** Lo que ve el usuario, como utilidades de Tailwind. El componente las
+ *  pasa tal cual a v-motion, asi que el typecheck cubre los nombres. */
+export type RevealState = Record<string, string>
 
-/** Cada paso, con las claves que motion-v tiene que animar. Se declara
- *  aparte para que documentar la cadena y construir el retardo no puedan
- *  separarse: si una animacion nueva usara `rotate`, entraria aqui y
- *  tambien en la tabla de la pagina. */
-export const chainKeys: Record<RevealChainStep, readonly string[]> = {
-  opacity: ['opacity'],
-  translate: ['x', 'y'],
-  scale: ['scale'],
-  filter: ['filter']
+export const hiddenState: Record<RevealAnimation, RevealState> = {
+  'fade': { opacity: '0' },
+  'fade-up': { opacity: '0', translate: '0 56px' },
+  'fade-down': { opacity: '0', translate: '0 -56px' },
+  'from-left': { opacity: '0', translate: '-56px 0' },
+  'from-right': { opacity: '0', translate: '56px 0' },
+  'zoom-in': { opacity: '0', scale: '0.9' },
+  'zoom-out': { opacity: '0', scale: '1.1' }
 }
 
-/** Fraccion de `duration` que espera cada paso antes de arrancar. */
-export const sequenceRatio: Record<RevealSequence, readonly number[]> = {
-  together: [0, 0, 0, 0],
-  lead: [0, 0.14, 0.14, 0.14],
-  staged: [0, 0.2, 0.36, 0.36]
+/** Estado de reposo. Vacio a proposito: no hay nada que declarar cuando el
+ *  bloque ya esta en su sitio. */
+export const shownState: RevealState = {}
+
+/** Curvas, como nombres de timing function de CSS. */
+export const easingCurves: Record<RevealEasing, string> = {
+  'out': 'ease-out',
+  'in-out': 'ease-in-out',
+  'soft': 'cubic-bezier(0.16, 1, 0.3, 1)',
+  'back': 'cubic-bezier(0.34, 1.4, 0.64, 1)'
 }
 
-/** Curvas. Motion acepta un array de cuatro numeros como cubic-bezier, que
- *  es lo que permite reproducir los mismos curvas que usaba el CSS sin
- *  convertirlas a nombre. `soft` es easeOutExpo: frena muy al final, que es
- *  lo que hace que un movimiento se lea como suave y no brusco. */
-export const easingCurves: Record<RevealEasing, number[] | string> = {
-  'out': 'easeOut',
-  'in-out': 'easeInOut',
-  'soft': [0.16, 1, 0.3, 1],
-  'back': [0.34, 1.4, 0.64, 1]
-}
-
-/** Retardo real de cada paso. Para documentacion y demos. */
-export function revealSteps(sequence: RevealSequence, duration: number, delay = 0) {
-  return revealChain.map((_, index) => delay + Math.round(duration * (sequenceRatio[sequence][index] ?? 0)))
-}
-
-/**
- * Estado de partida de cada animacion.
+/** Las variantes que se pasan a v-motion.
  *
- * Los valores salen de las clases de Tailwind que se usaban antes: 56px es
- * translate-y-14, 0.9 es scale-90, 'blur(4px)' es blur-sm. Con CSS eran
- * clases; aqui son claves del variant, y por eso motion-v anima transform y
- * opacity por compositor en lugar de recalcular estilos.
- */
-export const hiddenState: Record<RevealAnimation, VariantType> = {
-  'fade': { opacity: 0 },
-  'fade-up': { opacity: 0, y: 56 },
-  'fade-down': { opacity: 0, y: -56 },
-  'from-left': { opacity: 0, x: -56 },
-  'from-right': { opacity: 0, x: 56 },
-  'zoom-in': { opacity: 0, scale: 0.9 },
-  'zoom-out': { opacity: 0, scale: 1.1 },
-  // AVISO 1: `blur` deja un filter en el estado visible. Un filter distinto de
-  // none crea bloque contenedor para descendientes fixed y un contexto de
-  // apilamiento: hay que pensarlo antes de meter un tooltip o un modal
-  // dentro de un reveal con blur.
-  //
-  // AVISO 2: `filter` NO es gratis. El navegador lo evalua fuera del
-  // compositor, asi que hay que rasterizar y volver a filtrar toda el area
-  // del elemento en cada frame. En una tarjeta pequena no se nota; sobre una
-  // seccion con 20 imagenes remotas, baja el frame rate de golpe. Por eso
-  // ImagesSection usa `fade-up` y no `blur`: la demo de blur se queda en
-  // AnimationsSection, donde el elemento es pequeño.
-  //
-  // AVISO 3: el estado visible es `blur(0px)`, no `none`. Se podria cerrar en
-  // `none` para que el filtro desapareciera, pero no todos los navegadores
-  // interpolan hasta `none` y el salto se ve. `blur(0px)` es indistinguible de
-  // `none` aSimple vista y siempre interpola.
-  'blur': { opacity: 0, y: 40, scale: 1.05, filter: 'blur(4px)' }
-}
-
-/** Estado de asentado. Motion interpola desde el valor actual, asi que
- *  invertir el estado no produce saltos aunque cambie la duracion. */
-export const shownState: Record<RevealAnimation, VariantType> = {
-  'fade': { opacity: 1 },
-  'fade-up': { opacity: 1, y: 0 },
-  'fade-down': { opacity: 1, y: 0 },
-  'from-left': { opacity: 1, x: 0 },
-  'from-right': { opacity: 1, x: 0 },
-  'zoom-in': { opacity: 1, scale: 1 },
-  'zoom-out': { opacity: 1, scale: 1 },
-  'blur': { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }
-}
-
-/**
- * Transicion con un retardo por paso.
+ *  `once: true`   -> initial + visibleOnce: solo la primera vez.
+ *  `once: false`  -> initial + visible:      cada vez que entra.
  *
- * Motion acepta transition por propiedad, que es lo que hace posible la
- * cadena: cada clave recibe su propio retardo sin tocar el resto. Antes esto
- * era `transition-delay: 0ms, 200ms, 360ms` en el style; ahora es un objeto,
- * y por eso la pagina ya no necesita `transitionProperty` con `!` para
- * ganarle al reset de reduced motion: eso lo resuelve MotionConfig.
- *
- * AVISO: la duracion se REPARTE entre los pasos. Al principio cada paso
- * duraba `duration` entero y el escalonado se sumaba encima, asi que una
- * entrada de 700ms tardaba 700 x 1.36 = 952ms. El componente y el README
- * decian 700 y el navegador hacia 952, que es la clase de desajuste que hace
- * que una pagina se lea como lenta sin que nada parezca roto. Ahora cada
- * paso dura lo que queda tras su espera, y el total es `delay + duration`.
- */
-export function revealTransition(sequence: RevealSequence, duration: number, delay: number, easing: RevealEasing): VariantType['transition'] {
-  const ease = easingCurves[easing]
-  const steps = revealSteps(sequence, duration, delay)
-
-  return revealChain.reduce<Record<string, unknown>>((acc, step, index) => {
-    const hold = steps[index]! - delay
-    const perKey = { duration: Math.max(0, duration - hold), delay: steps[index]!, ease }
-
-    for (const key of chainKeys[step]) {
-      acc[key] = perKey
-    }
-
-    return acc
-  }, {})
-}
-
-/**
- * Los dos estados de una animacion, listos para `<Motion>`.
- *
- * `initial` es el estado de partida y `whileInView` el de asentado. Motion
- * revierte `whileInView` solo cuando el elemento sale del viewport, que es
- * justo el comportamiento de once=false, sin tener que observar nada a mano.
- */
-export function revealVariants(
-  animation: RevealAnimation,
-  sequence: RevealSequence,
-  duration: number,
-  delay: number,
-  easing: RevealEasing
-): { initial: VariantType, whileInView: VariantType } {
-  const transition = revealTransition(sequence, duration, delay, easing)
-
-  return {
-    initial: { ...hiddenState[animation], transition },
-    whileInView: { ...shownState[animation], transition }
-  }
+ *  El estado inicial se declara en `initial` y no en CSS a proposito: asi el
+ *  servidor pinta el bloque VISIBLE y no invisible. Con el patron contrario
+ *  el HTML llegaba con opacity:0 y el contenido se quedaba en un hueco
+ *  invisible hasta que JavaScript hydrataba y registraba el observer. */
+export function revealVariants(animation: RevealAnimation, once: RevealOnce): {
+  initial: RevealState
+  [key: string]: RevealState
+} {
+  return once
+    ? { initial: hiddenState[animation], visibleOnce: shownState }
+    : { initial: hiddenState[animation], visible: shownState }
 }

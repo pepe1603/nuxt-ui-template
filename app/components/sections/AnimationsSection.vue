@@ -1,20 +1,24 @@
 <script setup lang="ts">
-// Galeria de las 8 animaciones disponibles. Cada tarjeta usa la suya, asi
+// Galeria de las 7 animaciones disponibles. Cada tarjeta usa la suya, asi
 // que hay que recorrer la seccion para verlas todas. El retardo crece con
 // el indice para que la fila entre en cascada y no de golpe.
+//
+// Son 7 y no 8 porque no hay `blur`: filter va fuera del compositor, asi que
+// el navegador rasteriza el elemento entero en cada frame. En una tarjeta
+// pequeña se podria permitir, pero en cuanto el bloque crece el frame rate
+// se desploma. No compensa un efecto que se puede tener con zoom-in.
 //
 // Los valores van marcados con `as const` a proposito: si alguien anade una
 // animacion que no existe en RevealAnimation, el typecheck falla aqui en
 // lugar de fallar en silencio en el DOM.
 const animations = [
-  { value: 'fade', motion: 'sin desplazamiento', timing: '700ms · soft' },
-  { value: 'fade-up', motion: 'translate-y-14 → 0', timing: '700ms · soft' },
-  { value: 'fade-down', motion: '-translate-y-14 → 0', timing: '700ms · soft' },
-  { value: 'from-left', motion: '-translate-x-14 → 0', timing: '700ms · soft' },
-  { value: 'from-right', motion: 'translate-x-14 → 0', timing: '700ms · soft' },
-  { value: 'zoom-in', motion: 'scale-90 → 100', timing: '700ms · soft' },
-  { value: 'zoom-out', motion: 'scale-110 → 100', timing: '700ms · soft' },
-  { value: 'blur', motion: 'blur-sm + scale-105 → 0', timing: '700ms · soft' }
+  { value: 'fade', motion: 'sin desplazamiento', timing: '450ms · soft' },
+  { value: 'fade-up', motion: 'translate 0 56px → 0', timing: '450ms · soft' },
+  { value: 'fade-down', motion: 'translate 0 -56px → 0', timing: '450ms · soft' },
+  { value: 'from-left', motion: 'translate -56px 0 → 0', timing: '450ms · soft' },
+  { value: 'from-right', motion: 'translate 56px 0 → 0', timing: '450ms · soft' },
+  { value: 'zoom-in', motion: 'scale 0.9 → 1', timing: '450ms · soft' },
+  { value: 'zoom-out', motion: 'scale 1.1 → 1', timing: '450ms · soft' }
 ] as const
 
 const icons = [
@@ -24,8 +28,7 @@ const icons = [
   'i-lucide-arrow-right',
   'i-lucide-arrow-left',
   'i-lucide-minus',
-  'i-lucide-plus',
-  'i-lucide-scan-eye'
+  'i-lucide-plus'
 ] as const
 
 // Seccion alta a proposito: sin recorrido no hay forma de apreciar la
@@ -37,13 +40,12 @@ const ui = {
 
 <template>
   <UPageSection
-    title="Las ocho animaciones"
-    description="Cada tarjeta se revela con una animación distinta. Cambia el valor de animation y el bloque se comporta distinto sin tocar el componente: son variantes declaradas en utils/motion.ts."
+    title="Las siete animaciones"
+    description="Cada tarjeta se revela con una animación distinta. Cambia el valor de animation y el bloque se comporta distinto sin tocar el componente: son estados declarados en utils/motion.ts. No hay blur, y el motivo está al final de main.css."
     :ui="ui"
   >
     <RevealOnScroll
       animation="fade-down"
-      :duration="600"
     >
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <RevealOnScroll

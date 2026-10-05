@@ -19,64 +19,63 @@ useHead({
 
 <template>
   <!--
-    reducedMotion="user" es lo que hace que la app entera respete la
-    preferencia del sistema: Motion descarta transform y layout y deja pasar
-    solo opacity y color. Sin este nodo, prefers-reduced-motion no llega a
-    ninguna animacion. Se declara una vez aqui y no en cada componente.
+    No hay MotionConfig ni nada equivalente: con @vueuse/motion la
+    preferencia del sistema se respeta en CSS, con transition-property y
+    transition-duration en motion-reduce. Se resuelve en app/assets/css/main.css
+    y no en un nodo del arbol, asi que no se puede olvidar al anadir una
+    animacion nueva.
   -->
-  <MotionConfig reduced-motion="user">
-    <UApp>
-      <UHeader>
-        <template #left>
-          <!-- Icono del proyecto. Reemplaza por tu logo. -->
-          <NuxtLink
-            to="/"
-            class="flex items-center gap-2 rounded-md p-1 -ms-1 focus-visible:outline-primary/25 outline-3"
-          >
-            <UIcon
-              name="i-simple-icons-nuxtdotjs"
-              class="text-primary size-5"
-            />
-
-            <span class="font-semibold">
-              Template
-            </span>
-          </NuxtLink>
-        </template>
-
-        <template #right>
-          <UColorModeButton />
-
-          <UButton
-            to="https://github.com"
-            target="_blank"
-            icon="i-simple-icons-github"
-            aria-label="GitHub"
-            color="neutral"
-            variant="ghost"
+  <UApp>
+    <UHeader>
+      <template #left>
+        <!-- Icono del proyecto. Reemplaza por tu logo. -->
+        <NuxtLink
+          to="/"
+          class="flex items-center gap-2 rounded-md p-1 -ms-1 focus-visible:outline-primary/25 outline-3"
+        >
+          <UIcon
+            name="i-simple-icons-nuxtdotjs"
+            class="text-primary size-5"
           />
-        </template>
-      </UHeader>
 
-      <UMain>
-        <NuxtPage />
-      </UMain>
+          <span class="font-semibold">
+            Template
+          </span>
+        </NuxtLink>
+      </template>
 
-      <USeparator />
+      <template #right>
+        <UColorModeButton />
 
-      <UFooter>
-        <template #left>
-          <p class="text-muted text-sm">
-            © {{ new Date().getFullYear() }}
-          </p>
-        </template>
+        <UButton
+          to="https://github.com"
+          target="_blank"
+          icon="i-simple-icons-github"
+          aria-label="GitHub"
+          color="neutral"
+          variant="ghost"
+        />
+      </template>
+    </UHeader>
 
-        <template #right>
-          <p class="text-dimmed text-sm">
-            Nuxt 4 · Nuxt UI · Tailwind v4
-          </p>
-        </template>
-      </UFooter>
-    </UApp>
-  </MotionConfig>
+    <UMain>
+      <NuxtPage />
+    </UMain>
+
+    <USeparator />
+
+    <UFooter>
+      <template #left>
+        <p class="text-muted text-sm">
+          © {{ new Date().getFullYear() }}
+        </p>
+      </template>
+
+      <template #right>
+        <p class="text-dimmed text-sm">
+          Nuxt 4 · Nuxt UI · Tailwind v4
+        </p>
+      </template>
+    </UFooter>
+  </UApp>
 </template>

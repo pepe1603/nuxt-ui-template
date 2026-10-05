@@ -148,8 +148,8 @@ duplica el rol de encabezado.
 
 ### `RevealOnScroll`
 
-Revela un bloque al entrar en pantalla, con `whileInView` de **motion-v**. No
-hay IntersectionObserver en el código: quien decide cuándo es Motion.
+Revela un bloque al entrar en pantalla. VueUse decide *cuándo* y Tailwind
+decide *cómo*; ninguna de las dos capas conoce a la otra.
 
 ```vue
 <RevealOnScroll animation="fade-up" :delay="100">
@@ -159,78 +159,71 @@ hay IntersectionObserver en el código: quien decide cuándo es Motion.
 
 | Prop | Valores | Default |
 | --- | --- | --- |
-| `animation` | `fade`, `fade-up`, `fade-down`, `from-left`, `from-right`, `zoom-in`, `zoom-out`, `blur` | `fade-up` |
+| `animation` | `fade`, `fade-up`, `fade-down`, `from-left`, `from-right`, `zoom-in`, `zoom-out` | `fade-up` |
 | `easing` | `out`, `in-out`, `soft`, `back` | `soft` |
-| `sequence` | `together`, `lead`, `staged` | `staged` |
-| `duration` | milisegundos de la entrada **completa** | `450` |
+| `duration` | milisegundos | `450` |
 | `delay` | milisegundos | `0` |
 | `once` | booleano | `true` |
-| `amount` | `some`, `all`, o un número | `some` |
-| `margin` | margen del viewport, tipo `'-12% 0px -12% 0px'` | `'-12% 0px -12% 0px'` |
 
-`duration` es la duración **total** de la entrada, no la de cada paso. La
-duración se reparte entre los pasos de la cadena y el escalonado se consume
-dentro: una entrada de 450 ms con `staged` tarda 450 ms, no 450 × 1.36 = 612.
-Cuando cada paso duraba `duration` entero, el componente y este README decían
-700 y el navegador hacía 952, que es exactamente la clase de desajuste que hace
-que una página se lea como lenta sin que nada parezca roto.
+`once: true` usa la variante `visibleOnce` y el bloque solo entra la primera
+vez. `once: false` usa `visible` y se oculta al salir del viewport para volver
+a animarse cada vez que regresa. Son dos variantes distintas, no un parámetro
+que la librería interprete, y por eso el prop se llama `once`. El default es
+`true` porque con `false` un scroll normal hace entrar y salir bloques
+seguidos y la página se lee como que va a destiempo; `RepeatSection` lo pone a
+`false` a propósito, porque es justo lo que quiere demostrar.
 
-`once` es `true` por defecto. Con `false` el bloque se revierte a opacidad 0 al
-salir del viewport y re-anima al volver: en una página larga un scroll normal
-dispara entradas y salidas seguidas. `RepeatSection` lo pone a `false` a
-propósito, porque es justo lo que quiere demostrar.
+El escalonado se hace con `delay`, uno por elemento. No hay cadena de
+propiedades ni retardo por clave: con una transición CSS no hace falta, y cada
+paso con su propio retardo hacía que una entrada de 700 ms tardara 952 ms sin
+que nada pareciera roto.
 
-La entrada y la salida usan la misma transición; antes la salida era un 45 %
-más corta, porque en CSS eso era un `transition-duration` aparte.
+Los estados están en `app/utils/motion.ts` como utilidades de Tailwind, fuera
+del componente, para que el typecheck cubra los nombres y la página de ejemplo
+muestre los valores reales. No hay `blur`: `filter` va fuera del compositor y
+obliga a rasterizar el elemento entero en cada frame.
 
-`sequence` encadena las propiedades dentro de una misma entrada —primero la
-opacidad, después el desplazamiento—. El retardo de cada paso no es una lista de
-milisegundos en el `style`, sino el `transition` de motion, que acepta un
-retardo por clave. Todo está en `app/utils/motion.ts`, fuera del componente,
-para que la página de ejemplo muestre los números reales y no copias.
+### El estado inicial va en la variante, no en una clase
 
-### `prefers-reduced-motion` no es automático
+Es lo contrario de lo que parece, y es lo que evita que la página arranque
+con huecos:
 
-Lo resuelve **un único nodo** en `app/app.vue`:
-
-```vue
-<MotionConfig reduced-motion="user">
+```ts
+// Esto pinta el bloque INVISIBLE en el HTML del servidor, y el contenido se
+// queda en un hueco hasta que hidrata: style="opacity:0" en el primer byte.
+// initial: hiddenState[animation],
 ```
 
-Con eso Motion descarta `transform` y `layout` y deja pasar solo `opacity` y
-color. Sin ese nodo, ninguna animación de la app respeta la preferencia del
-sistema y no salta ningún error, así que **si añades un `MotionConfig` o
-cambias la app, comprueba que sigue ahí**.
-
-### Lo que CSS no hace
-
-La sección `MotionSection` demuestra lo que necesita un motor de animación y
-no una transición: resortes, escalonado, exit y gestos.
-
-```vue
-<Motion
-  :while-hover="{ y: -6, scale: 1.02 }"
-  :while-press="{ scale: 0.98 }"
-  :transition="{ type: 'spring', stiffness: 260, damping: 20 }"
->
-  <div class="bg-elevated border border-default p-5">…</div>
-</Motion>
+```ts
+// Con la variante, el servidor pinta el bloque VISIBLE y la animación solo
+// ocurre si el bloque estaba de verdad fuera de la pantalla al cargar.
+initial: hiddenState[animation],
+visibleOnce: {}
 ```
 
-| Pieza | Para qué |
-| --- | --- |
-| `while-hover`, `while-press`, `while-drag` | Estados que se montan y se limpian solos |
-| `transition: { type: 'spring' }` | `duration` dice cuánto tarda; el resorte dice cómo se llega y se adapta a la distancia |
-| `staggerChildren` en el padre | Escalonar hijos sin escribir un retardo por índice |
-| `AnimatePresence` | Animar la salida: sin él, Vue ya destruyó el nodo y no hay nada que animar |
-| `drag`, `dragConstraints`, `dragElastic` | Gestos. `dragConstraints` **no** es opcional: sin él el elemento se sale de la página |
+### `prefers-reduced-motion` se resuelve en CSS
 
-La regla que evita los conflictos con Nuxt UI: **la animación va en un elemento
-propio**, nunca sobre un `UButton` o un `USlideover`. Nuxt UI y Reka UI ya
-mueven sus nodos internos con transiciones CSS, y dos transiciones en el mismo
-elemento significa que gana la última que se escribió, sin avisar. Por eso los
-hover de la sección viven en el `div` que envuelve a la tarjeta, y el `UButton`
-de dentro es solo contenido.
+No hay ningún nodo del árbol que mantener. Como la transición la escribe la
+librería en el atributo `style` del elemento, la única forma de anularla es
+ganarle en especificidad, y para eso hace falta `!important` en el bloque
+`@media` del final de `app/assets/css/main.css`. Si añades una animación, la
+preferencia del sistema se respeta sola.
+
+### Lo que esta librería no tiene
+
+Se eligió `@vueuse/motion` sobre `motion-v` (Framer Motion para Vue) por
+simplez, así que hay cosas que no están y no hay que buscar:
+
+- **Sin exit animations.** No hay `AnimatePresence`, así que un bloque que se
+  desmonta no se anima al salir.
+- **Sin gestos.** No hay `drag`, ni `whileDrag`, ni `whileTap`.
+- **Sin layout.** No hay `layout` ni `layoutId`.
+
+Para eso, `motion-v` es la opción: es la librería de Framer Motion para Vue y
+tiene las tres. El coste es el que se vio al usarla: `whileInView` con margen,
+variantes tipadas y un `MotionConfig` del que depende toda la app. Si este
+proyecto llegara a necesitar salidas animadas, cambiar de librería es el
+movimiento natural, y el componente está aislado para ese efecto.
 
 ## Imágenes
 
@@ -336,4 +329,4 @@ modificas la plantilla, no tenés que publicar los cambios.
 - [Tailwind CSS v4](https://tailwindcss.com)
 - [Nuxt Fonts](https://nuxt.com/modules/fonts)
 - [Nuxt Image](https://nuxt.com/modules/image)
-- [Motion for Vue](https://motion-vue.dev)
+- [VueUse Motion](https://vueuse.org/motion/overview.html)

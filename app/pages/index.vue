@@ -10,13 +10,13 @@ useSeoMeta({
 <template>
   <UPage>
     <!--
-      El hero va sin retardo porque esta por encima del fold: el observer
-      dispara en el primer frame y la entrada se ve como una carga, no como
-      un scroll. once=true para que no desaparezca al bajar.
+      El hero va envuelto, y con duration corta y sin retardo porque esta
+      por encima del fold: la entrada se ve como una carga, no como un
+      scroll. once para que no desaparezca al bajar.
     -->
     <RevealOnScroll
       animation="fade"
-      :duration="400"
+      :duration="300"
       once
     >
       <HeroSection />
@@ -53,18 +53,8 @@ useSeoMeta({
       <RepeatSection />
     </RevealOnScroll>
 
-    <!--
-      fade-up y no blur a proposito: `filter: blur()` obliga al navegador a
-      recomponer una capa del tamano de la seccion en cada frame, y aqui hay
-      22 imagenes remotas. La demo de blur vive en AnimationsSection, donde
-      el elemento es una tarjeta pequena y el filtro no se nota.
-    -->
     <RevealOnScroll animation="fade-up">
       <ImagesSection />
-    </RevealOnScroll>
-
-    <RevealOnScroll animation="fade-up">
-      <MotionSection />
     </RevealOnScroll>
   </UPage>
 </template>

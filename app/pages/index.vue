@@ -16,7 +16,7 @@ useSeoMeta({
     -->
     <RevealOnScroll
       animation="fade"
-      :duration="500"
+      :duration="900"
       once
     >
       <HeroSection />
@@ -63,6 +63,10 @@ useSeoMeta({
 
     <RevealOnScroll animation="fade-up">
       <MotionSection />
+    </RevealOnScroll>
+
+    <RevealOnScroll animation="from-right">
+      <ToastSection />
     </RevealOnScroll>
   </UPage>
 </template>

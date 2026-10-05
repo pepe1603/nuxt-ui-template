@@ -15,16 +15,29 @@ useHead({
     lang: 'es'
   }
 })
+
+// ======================================================================
+// TOASTER
+// <UApp> es quien monta el <UToaster> que pinta los toasts, y sin el los
+// avisos se encolan pero no se ven. No hace falta pasarle nada: todo tiene
+// valores por defecto.
+//
+// Aqui se le pasa un estado solo para que la seccion de documentacion de
+// los toasts pueda cambiar posicion, duracion o limite en caliente. Si
+// quitas esa seccion, quita estas dos lineas: el binding es opcional.
+// ======================================================================
+
+const toaster = useToasterOptions()
 </script>
 
 <template>
-  <UApp>
+  <UApp :toaster="toaster">
     <UHeader>
       <template #left>
         <!-- Icono del proyecto. Reemplaza por tu logo. -->
         <NuxtLink
           to="/"
-          class="flex items-center gap-2 rounded-md p-1 -ms-1 focus-visible:outline-primary/25 outline-3"
+          class="flex items-center gap-2 rounded-md p-1.5 -ms-1 hover:outline-1 outline-primary/25"
         >
           <UIcon
             name="i-simple-icons-nuxtdotjs"

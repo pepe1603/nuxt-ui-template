@@ -28,11 +28,11 @@ export default defineNuxtConfig({
       // `true` no haria falta la lista; el array la completa con los que
       // se usan de forma dinamica y el escaner no puede ver.
       //
-      // 'Modal' va aqui porque AppModal.vue lo envuelve, pero envuelto no
-      // cuenta como dinamico: es una referencia estatica y el escaner la
-      // ve. Se deja de forma explicita para que el tema de Modal no
-      // dependa de que la seccion que lo usa siga en la pagina.
-      componentDetection: ['Modal']
+      // 'Modal' y 'Drawer' van aqui porque AppModal.vue y AppDrawer.vue los
+      // envuelven, pero envuelto no cuenta como dinamico: es una referencia
+      // estatica y el escaner la ve. Se dejan de forma explicita para que sus
+      // temas no dependan de que las secciones que los usan sigan en la pagina.
+      componentDetection: ['Modal', 'Drawer']
     }
   },
 

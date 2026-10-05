@@ -38,7 +38,10 @@ const blocks = [
   {
     animation: 'fade-down',
     easing: 'back',
-    icon: 'i-lucide-bounce',
+    // AVISO: el icono NO es `i-lucide-bounce`. Ese es de Feather, no de Lucide,
+    // y no existe en la coleccion: @nuxt/icon lo resolvia con un warning en
+    // cada render de la pagina. Lucide tiene `arrow-down-up`.
+    icon: 'i-lucide-arrow-down-up',
     title: 'Con curva back',
     text: 'La curva cubic-bezier(0.34,1.4,0.64,1) se pasa de su destino y vuelve. Se nota al entrar, no al salir.'
   }

@@ -117,8 +117,31 @@ Definidas por Nuxt UI a partir de los tokens. No hace falta memorizar hex, estas
 
 ## Componentes propios
 
-Dos componentes añadidos. Cualquier otro (`UCard`, `UButton`, `UBadge`,
+Tres componentes añadidos. Cualquier otro (`UCard`, `UButton`, `UBadge`,
 `UModal`, `UTable`…) ya viene incluido en Nuxt UI y no necesita uno propio.
+
+### Dos capas de animación
+
+Hay dos formas de animar aquí, y conviene no mezclarlas:
+
+| | `RevealOnScroll` | `MotionSection` |
+| --- | --- | --- |
+| Cómo | `transition` CSS | `@vueuse/motion` |
+| Necesita | nada | el módulo `@vueuse/motion/nuxt` |
+| Estado | dos clases de Tailwind | valores físicos con velocidad |
+| Para qué | entrar y salir de pantalla | valores que siguen moviéndose |
+
+El reveal de scroll podría hacerse con `@vueuse/motion`, y sería un error: para
+una entrada de 700 ms no aporta nada y cuesta mantenerlo sincronizado con el
+render del servidor. La librería entra solo donde el valor tiene que continuar
+moviéndose después de cambiar de objetivo, que es el único caso en que una
+transición CSS se queda corta.
+
+La regla que separa las dos capas es la del enunciado de la sección, y es la
+misma que se aplica a `motion-v`: un módulo de animación no se mete debajo de
+`UCard`, `UButton` o cualquier otro componente de Nuxt UI. Va en un `<div>`
+propio, porque los componentes de la librería llevan su propio estado interno y
+su propia transición; pelearse con ellos desde fuera produce saltos.
 
 ### `GradientTitle`
 
@@ -175,6 +198,90 @@ resuelve más rápido y sin encadenar. La coreografía está en
 Respeta `prefers-reduced-motion`: cada animación declara su propio reset de
 `motion-reduce`, sin tocar la lógica.
 
+Un aviso que no sale de la API: `isVisible` empieza en `false`, así que el
+servidor siempre escribe el bloque en su estado oculto, aunque esté por encima
+del fold. Sin JavaScript ese contenido no aparece nunca. En el `HeroSection` se
+compensa con `once` y una duración corta, y la sección *La primera pantalla*
+del sitio explica el trade-off entero.
+
+## Imágenes
+
+`@nuxt/image` con **ipx**, el proveedor por defecto. El src es una URL absoluta:
+las imágenes no se sirven desde este proyecto, ipx las descarga, las recorta y
+sirve la variante que pide el navegador.
+
+```vue
+<script setup lang="ts">
+const foto = {
+  src: 'https://ejemplo.com/foto.jpg',
+  alt: 'Lo que muestra'
+}
+</script>
+
+<template>
+  <NuxtImg
+    :src="foto.src"
+    :alt="foto.alt"
+    sizes="100vw sm:50vw lg:33vw"
+    loading="lazy"
+  />
+</template>
+```
+
+| Componente | Para qué |
+| --- | --- |
+| `NuxtImg` | Una sola fuente, con `srcset` responsive |
+| `NuxtPicture` | Varios formatos (`avif`, `webp`) con fallback automático |
+| `UAvatar` y el resto de Nuxt UI | Ya usan `NuxtImg` por debajo, basta con pasar `src` |
+
+`sizes` describe el ancho que la imagen ocupa **en cada breakpoint**, no el de
+la ventana. Es lo que permite a ipx generar candidatos que encajan con el
+layout: `lg:33vw` genera el ancho de una de tres columnas, no un tercio de
+pantalla completo.
+
+### El host tiene que estar en `image.domains`
+
+En `nuxt.config.ts`:
+
+```ts
+image: {
+  domains: ['4kwallpapers.com', 'picsum.photos', 'fastly.picsum.photos']
+}
+```
+
+Sin esa lista la imagen **se ve igual y no da ningún error**: @nuxt/image
+comprueba el host, no lo encuentra, y devuelve la URL original sin pasar por
+ipx. Te queda sin `srcset`, sin avif y sin placeholder, sin avisar.
+
+Dos detalles que no son obvios:
+
+- Va el **host**, no la URL: `4kwallpapers.com`, nunca `https://4kwallpapers.com/...`.
+- Si el host redirige, declara también el destino. `picsum.photos` responde 302
+  a `fastly.picsum.photos` e ipx valida el host **después** del redirect, así que
+  con uno solo los avatares devuelven `IPX_FORBIDDEN_HOST`.
+
+ipx descarga en el servidor, así que tu despliegue necesita salida a internet y
+los hosts que bloquean por hotlink o por User-Agent no sirven.
+
+### Dos cosas más que rompen sin aviso
+
+**`placeholder` como string se lee como URL.** Hay que pasarle un número o un
+array:
+
+```vue
+<NuxtImg :src="foto.src" :placeholder="[32, 32, 20]" />
+```
+
+Con `placeholder="32"` el atributo `src` acaba siendo literalmente `32`, que
+devuelve un 404. Y el array se queda en `[width, height, quality]`: una cuarta
+posición emite `b_<valor>`, que ipx lee como color de fondo y espera un color,
+así que la imagen responde 400.
+
+**Nada de `prerender`.** El handler que sirve `/_ipx` viaja en el server de
+Nitro. Si prerenderizas las rutas, nitro emite output estático, no queda
+runtime y todas las variantes devuelven 404. Para seguir desplegando estático
+hay que cambiar a un proveedor cloud en `nuxt.config.ts`.
+
 ## Flujo de trabajo
 
 `main` solo recibe releases, `develop` es el punto de integración y las ramas de
@@ -185,6 +292,8 @@ trabajo se quedan en local. Ver [CONTRIBUTING.md](./CONTRIBUTING.md).
 - `app/app.vue` — nombre del proyecto en el header y footer, enlaces sociales
 - `app/app.config.ts` — color de marca
 - `app/assets/css/main.css` — neutros, superficies, tipografía
+- `app/utils/reveal.ts` — estados y coreografía de las animaciones por `transition`
+- `nuxt.config.ts` — dominios remotos permitidos por `@nuxt/image`
 - `app/pages/index.vue` — esta página es documentación del sistema; elimínala al iniciar un proyecto
 - Imágenes sociales (ogImage): coloca la tuya en `public/` y descomenta la línea en `app/app.vue`
 
@@ -198,3 +307,6 @@ modificas la plantilla, no tenés que publicar los cambios.
 - [Nuxt UI](https://ui.nuxt.com)
 - [Tailwind CSS v4](https://tailwindcss.com)
 - [Nuxt Fonts](https://nuxt.com/modules/fonts)
+- [Nuxt Image](https://nuxt.com/modules/image)
+- [VueUse Motion](https://motion.vueuse.js.org) — solo para la sección *Lo que
+  CSS no puede hacer*; el reveal de scroll no lo usa

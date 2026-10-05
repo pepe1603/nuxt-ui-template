@@ -70,19 +70,100 @@
 }
 
 /* Nuxt UI no cubre texto con gradiente, asi que se expone como utilidad.
-   Usa los shades crudos de primary porque --ui-primary ya se resuelve a un
-   unico shade por tema y un gradiente necesita dos.
-   Sigue al color de marca automaticamente: no hay nada que cambiar aqui
-   si cambias ui.colors.primary en app.config.ts. */
+
+   Aqui hay una trampa que ya se pago dos veces, asi que queda escrita:
+
+   1. NO uses los shades crudos. --ui-color-primary-500 y -400 son valores
+      FIJOS de la paleta: son los mismos en light y en dark, asi que un
+      degradado armado con ellos no se adapta nunca. Lo que cambia con el
+      tema es el alias --ui-primary (500 en light, 400 en dark), y lo cambia
+      plugins/colors.js del propio @nuxt/ui.
+
+   2. De una sola variable. El segundo extremo se deriva con color-mix en vez
+      de declarar un token por tema: menos superficie que mantener, y el
+      degradado se invierte solo porque parte de --ui-primary, que ya es mas
+      claro en dark.
+
+   3. El recorte y el color van DENTRO de la utilidad. Una que se llama
+      text-gradient tiene que verse sola, y no depender de que otro se acuerde
+      de anadir text-transparent y bg-clip-text: si se olvida, el color del
+      texto tapa el fondo y el degradado no se ve.
+
+   4. AVISO DEL EDITOR ESPERADO. El LSP de Tailwind marca "Cannot resolve
+      --ui-primary custom property" mas abajo, y no es un fallo: @nuxt/ui
+      genera esos tokens en un <style> inyectado por JS con useHead, no en el
+      CSS del proyecto, asi que el editor no puede indexarlos. En el navegador
+      la variable esta definida y el degradado se pinta. Si alguna vez no se
+      viera, el fallo no seria de esta utilidad, sino que el token no llego a
+      definirse. */
 @utility text-gradient {
   background-image: linear-gradient(
     to right,
-    var(--ui-color-primary-500),
-    var(--ui-color-primary-400)
+    var(--ui-primary),
+    color-mix(in oklab, var(--ui-primary) 55%, white)
   );
+  background-clip: text;
+  color: transparent;
 }
 
 html {
   background-color: var(--ui-bg);
   color: var(--ui-text);
 }
+
+/* ==========================================================================
+   AVISOS
+   Errores que ya se han pagado en este archivo o en RevealOnScroll. No son
+   notas de estilo: son fallos reales que se leen bien y aun asi hacen que la
+   pagina parezca lenta o rota. Si tocas estos ficheros, leelos antes.
+
+   --------------------------------------------------------------------------
+   1. LOS AVISOS DEL LSP EN text-gradient SON ESPERADOS
+   @nuxt/ui no emite --ui-color-primary-* ni --ui-primary en el CSS del
+   proyecto: los inyecta en un <style> desde runtime (plugins/colors.js, con
+   useHead). El LSP de Tailwind solo indexa el CSS compilado, asi que marca
+   "Cannot resolve" en cualquier token --ui-*. No lo toques para callarlo:
+   devolveria el problema de verdad, que es que la variable no existe.
+
+   --------------------------------------------------------------------------
+   2. NO CONSTRUYAS EL DEGRADADO CON SHADES CRUDOS
+   --ui-color-primary-400 y -500 valen lo mismo en light y en dark. Un
+   degradado con ellos parece que se adapta al tema y no se adapta. Solo
+   --ui-primary cambia de shade segun el tema. La utilidad sale de ahi y
+   deriva el segundo extremo con color-mix, con lo que el degradado se
+   invierte solo en dark y queda una sola variable de Nuxt UI.
+
+   --------------------------------------------------------------------------
+   3. UNA DURACION ANIMADA NO ES LO QUE DICE EL NUMERO SI LA SUMAS
+   Los escalonamientos se suman a la duracion. Una entrada de 700ms cuyo
+   ultimo paso espera un 36% dura 952ms, no 700. En RevealOnScroll esto esta
+   resuelto: `duration` es la duracion de la entrada completa y no se suma
+   la secuencia encima. Los numeros de README y del componente son los
+   reales.
+
+   --------------------------------------------------------------------------
+   4. NO ANULES transition-duration DE FORMA GLOBAL
+   Un `@media (prefers-reduced-motion: reduce)` con `* { transition-duration:
+   0.01ms !important }` parece la solucion universal, y no lo es: mataria
+   tambien las animaciones de Nuxt UI, que traen su propia transicion y su
+   propia logica de reduced motion, y lo haria sin avisar. Nada falla,
+   simplemente desaparece el movimiento de menus, tooltips y dialogos.
+
+   Lo correcto son las utilidades `motion-reduce` de Tailwind, aplicadas en
+   la clase del propio elemento. RevealOnScroll las trae en sus estados, y
+   por eso su bloque de reduced motion esta junto a ellos. Si anades una
+   animacion fuera de ese componente, ponle su `motion-reduce` en la misma
+   clase.
+
+   --------------------------------------------------------------------------
+   5. filter: blur() NO ES GRATIS Y ESTA FUERA DEL COMPOSITOR
+   El navegador rasteriza y vuelve a filtrar toda el area del elemento en
+   cada frame. En una tarjeta pequena no se nota; sobre una seccion con
+   veinte imagenes el frame rate se desploma. Si algo va lento, mira primero
+   si hay un blur animandose sobre algo grande.
+
+   Ademas: blur(0px) sigue siendo un filter, distinto de none. Deja bloque
+   contenedor para descendientes position:fixed y contexto de apilamiento,
+   asi que un tooltip o un modal dentro de un reveal con blur se posiciona
+   mal. Por eso ImagesSection anima fade-up y no blur.
+   ========================================================================== */

@@ -76,5 +76,9 @@ useSeoMeta({
     <RevealOnScroll animation="from-left">
       <DrawerSection />
     </RevealOnScroll>
+
+    <RevealOnScroll animation="fade-up">
+      <TooltipSection />
+    </RevealOnScroll>
   </UPage>
 </template>

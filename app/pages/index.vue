@@ -80,5 +80,9 @@ useSeoMeta({
     <RevealOnScroll animation="fade-up">
       <TooltipSection />
     </RevealOnScroll>
+
+    <RevealOnScroll animation="from-right">
+      <AlertSection />
+    </RevealOnScroll>
   </UPage>
 </template>

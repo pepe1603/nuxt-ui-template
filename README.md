@@ -117,8 +117,31 @@ Definidas por Nuxt UI a partir de los tokens. No hace falta memorizar hex, estas
 
 ## Componentes propios
 
-Dos componentes añadidos. Cualquier otro (`UCard`, `UButton`, `UBadge`,
+Tres componentes añadidos. Cualquier otro (`UCard`, `UButton`, `UBadge`,
 `UModal`, `UTable`…) ya viene incluido en Nuxt UI y no necesita uno propio.
+
+### Dos capas de animación
+
+Hay dos formas de animar aquí, y conviene no mezclarlas:
+
+| | `RevealOnScroll` | `MotionSection` |
+| --- | --- | --- |
+| Cómo | `transition` CSS | `@vueuse/motion` |
+| Necesita | nada | el módulo `@vueuse/motion/nuxt` |
+| Estado | dos clases de Tailwind | valores físicos con velocidad |
+| Para qué | entrar y salir de pantalla | valores que siguen moviéndose |
+
+El reveal de scroll podría hacerse con `@vueuse/motion`, y sería un error: para
+una entrada de 700 ms no aporta nada y cuesta mantenerlo sincronizado con el
+render del servidor. La librería entra solo donde el valor tiene que continuar
+moviéndose después de cambiar de objetivo, que es el único caso en que una
+transición CSS se queda corta.
+
+La regla que separa las dos capas es la del enunciado de la sección, y es la
+misma que se aplica a `motion-v`: un módulo de animación no se mete debajo de
+`UCard`, `UButton` o cualquier otro componente de Nuxt UI. Va en un `<div>`
+propio, porque los componentes de la librería llevan su propio estado interno y
+su propia transición; pelearse con ellos desde fuera produce saltos.
 
 ### `GradientTitle`
 
@@ -269,7 +292,7 @@ trabajo se quedan en local. Ver [CONTRIBUTING.md](./CONTRIBUTING.md).
 - `app/app.vue` — nombre del proyecto en el header y footer, enlaces sociales
 - `app/app.config.ts` — color de marca
 - `app/assets/css/main.css` — neutros, superficies, tipografía
-- `app/utils/motion.ts` — estados y coreografía de las animaciones
+- `app/utils/reveal.ts` — estados y coreografía de las animaciones por `transition`
 - `nuxt.config.ts` — dominios remotos permitidos por `@nuxt/image`
 - `app/pages/index.vue` — esta página es documentación del sistema; elimínala al iniciar un proyecto
 - Imágenes sociales (ogImage): coloca la tuya en `public/` y descomenta la línea en `app/app.vue`
@@ -285,4 +308,5 @@ modificas la plantilla, no tenés que publicar los cambios.
 - [Tailwind CSS v4](https://tailwindcss.com)
 - [Nuxt Fonts](https://nuxt.com/modules/fonts)
 - [Nuxt Image](https://nuxt.com/modules/image)
-- [VueUse Motion](https://vueuse.org/motion/overview.html)
+- [VueUse Motion](https://motion.vueuse.js.org) — solo para la sección *Lo que
+  CSS no puede hacer*; el reveal de scroll no lo usa

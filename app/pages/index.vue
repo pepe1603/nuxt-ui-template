@@ -60,5 +60,9 @@ useSeoMeta({
     <RevealOnScroll animation="blur">
       <ImagesSection />
     </RevealOnScroll>
+
+    <RevealOnScroll animation="fade-up">
+      <MotionSection />
+    </RevealOnScroll>
   </UPage>
 </template>

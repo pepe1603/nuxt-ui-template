@@ -48,6 +48,16 @@ const toaster = useToasterOptions()
             Template
           </span>
         </NuxtLink>
+
+        <!-- Paginas de ejemplo del template. Quitalas al empezar un
+             proyecto de verdad: no aportan nada a la aplicacion. -->
+        <UButton
+          to="/formulario"
+          label="Formulario"
+          size="xs"
+          color="neutral"
+          variant="ghost"
+        />
       </template>
 
       <template #right>

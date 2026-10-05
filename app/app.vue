@@ -58,6 +58,14 @@ const toaster = useToasterOptions()
           color="neutral"
           variant="ghost"
         />
+
+        <UButton
+          to="/carrusel"
+          label="Carrusel"
+          size="xs"
+          color="neutral"
+          variant="ghost"
+        />
       </template>
 
       <template #right>

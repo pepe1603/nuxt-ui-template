@@ -79,10 +79,22 @@ export const hiddenState: Record<RevealAnimation, VariantType> = {
   'from-right': { opacity: 0, x: 56 },
   'zoom-in': { opacity: 0, scale: 0.9 },
   'zoom-out': { opacity: 0, scale: 1.1 },
-  // AVISO: `blur` deja un filter en el estado visible. Un filter distinto de
+  // AVISO 1: `blur` deja un filter en el estado visible. Un filter distinto de
   // none crea bloque contenedor para descendientes fixed y un contexto de
   // apilamiento: hay que pensarlo antes de meter un tooltip o un modal
   // dentro de un reveal con blur.
+  //
+  // AVISO 2: `filter` NO es gratis. El navegador lo evalua fuera del
+  // compositor, asi que hay que rasterizar y volver a filtrar toda el area
+  // del elemento en cada frame. En una tarjeta pequena no se nota; sobre una
+  // seccion con 20 imagenes remotas, baja el frame rate de golpe. Por eso
+  // ImagesSection usa `fade-up` y no `blur`: la demo de blur se queda en
+  // AnimationsSection, donde el elemento es pequeño.
+  //
+  // AVISO 3: el estado visible es `blur(0px)`, no `none`. Se podria cerrar en
+  // `none` para que el filtro desapareciera, pero no todos los navegadores
+  // interpolan hasta `none` y el salto se ve. `blur(0px)` es indistinguible de
+  // `none` aSimple vista y siempre interpola.
   'blur': { opacity: 0, y: 40, scale: 1.05, filter: 'blur(4px)' }
 }
 
@@ -107,13 +119,21 @@ export const shownState: Record<RevealAnimation, VariantType> = {
  * era `transition-delay: 0ms, 200ms, 360ms` en el style; ahora es un objeto,
  * y por eso la pagina ya no necesita `transitionProperty` con `!` para
  * ganarle al reset de reduced motion: eso lo resuelve MotionConfig.
+ *
+ * AVISO: la duracion se REPARTE entre los pasos. Al principio cada paso
+ * duraba `duration` entero y el escalonado se sumaba encima, asi que una
+ * entrada de 700ms tardaba 700 x 1.36 = 952ms. El componente y el README
+ * decian 700 y el navegador hacia 952, que es la clase de desajuste que hace
+ * que una pagina se lea como lenta sin que nada parezca roto. Ahora cada
+ * paso dura lo que queda tras su espera, y el total es `delay + duration`.
  */
 export function revealTransition(sequence: RevealSequence, duration: number, delay: number, easing: RevealEasing): VariantType['transition'] {
   const ease = easingCurves[easing]
   const steps = revealSteps(sequence, duration, delay)
 
   return revealChain.reduce<Record<string, unknown>>((acc, step, index) => {
-    const perKey = { duration, delay: steps[index]!, ease }
+    const hold = steps[index]! - delay
+    const perKey = { duration: Math.max(0, duration - hold), delay: steps[index]!, ease }
 
     for (const key of chainKeys[step]) {
       acc[key] = perKey

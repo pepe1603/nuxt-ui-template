@@ -1,8 +1,10 @@
 <script setup lang="ts">
-// Demo de entrar y salir. once=false (el default) hace que cada bloque
-// reaparezca cada vez que vuelve a entrar en pantalla, asi que hay que
-// bajar, subir y bajar otra vez para verlo. Quien revierte es Motion: el
-// `whileInView` se deshace solo al salir del viewport, sin observer propio.
+// Demo de entrar y salir. Es la seccion que pone `once=false` a proposito:
+// el default de RevealOnScroll es true, y en el resto de la pagina no hace
+// falta, porque con false un scroll normal hace entrar y salir bloques
+// seguidos y la pagina se lee como que va a destiempo. Aqui si se quiere,
+// asi que hay que bajar, subir y bajar otra vez para verlo. Quien revierte
+// es Motion: el `whileInView` se deshace solo al salir del viewport.
 //
 // Los bloques son altos a proposito: un elemento mas pequeño que el viewport
 // se ve entrar y salir pegado al borde, que no demuestra nada. Con bloques
@@ -53,7 +55,7 @@ const ui = {
 <template>
   <UPageSection
     title="Entrar y salir"
-    description="Con once=false —el default— el bloque se oculta al dejar la pantalla y vuelve a animarse cada vez que regresa. Baja, sube y vuelve a bajar para verlo."
+    description="Con once=false el bloque se oculta al dejar la pantalla y vuelve a animarse cada vez que regresa. Es el comportamiento más caro de la lista: en el resto de la página once=true. Baja, sube y vuelve a bajar para verlo."
     :ui="ui"
   >
     <div class="flex flex-col gap-6">
@@ -62,8 +64,9 @@ const ui = {
         :key="block.title"
         :animation="block.animation"
         :easing="block.easing"
-        :duration="750"
+        :duration="500"
         :delay="index * 60"
+        :once="false"
       >
         <div class="flex min-h-72 flex-col items-start justify-center gap-3 rounded-xl bg-muted border border-default p-8">
           <div class="bg-primary/10 text-primary flex size-11 items-center justify-center rounded-lg">

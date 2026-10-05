@@ -162,15 +162,25 @@ hay IntersectionObserver en el código: quien decide cuándo es Motion.
 | `animation` | `fade`, `fade-up`, `fade-down`, `from-left`, `from-right`, `zoom-in`, `zoom-out`, `blur` | `fade-up` |
 | `easing` | `out`, `in-out`, `soft`, `back` | `soft` |
 | `sequence` | `together`, `lead`, `staged` | `staged` |
-| `duration` | milisegundos | `700` |
+| `duration` | milisegundos de la entrada **completa** | `450` |
 | `delay` | milisegundos | `0` |
-| `once` | booleano | `false` |
+| `once` | booleano | `true` |
 | `amount` | `some`, `all`, o un número | `some` |
 | `margin` | margen del viewport, tipo `'-12% 0px -12% 0px'` | `'-12% 0px -12% 0px'` |
 
-Con `once: false` el bloque se oculta al salir de la pantalla y vuelve a
-animarse cada vez que regresa: lo revierte Motion al salir del viewport. La
-entrada y la salida usan ahora la misma transición; antes la salida era un 45 %
+`duration` es la duración **total** de la entrada, no la de cada paso. La
+duración se reparte entre los pasos de la cadena y el escalonado se consume
+dentro: una entrada de 450 ms con `staged` tarda 450 ms, no 450 × 1.36 = 612.
+Cuando cada paso duraba `duration` entero, el componente y este README decían
+700 y el navegador hacía 952, que es exactamente la clase de desajuste que hace
+que una página se lea como lenta sin que nada parezca roto.
+
+`once` es `true` por defecto. Con `false` el bloque se revierte a opacidad 0 al
+salir del viewport y re-anima al volver: en una página larga un scroll normal
+dispara entradas y salidas seguidas. `RepeatSection` lo pone a `false` a
+propósito, porque es justo lo que quiere demostrar.
+
+La entrada y la salida usan la misma transición; antes la salida era un 45 %
 más corta, porque en CSS eso era un `transition-duration` aparte.
 
 `sequence` encadena las propiedades dentro de una misma entrada —primero la

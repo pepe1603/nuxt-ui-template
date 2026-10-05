@@ -5,11 +5,15 @@
 // juntas: text-transparent (si no, el color del texto tapa el fondo) y
 // bg-clip-text (recorta el fondo a la forma de las letras).
 //
-// El degradado vive en @utility text-gradient (assets/css/main.css) y va
-// de --ui-color-primary-500 a --ui-color-primary-400: justo los dos shades
-// que Nuxt UI resuelve como --ui-primary segun el tema. Los dos extremos
-// son el color de marca tanto en light como en dark, y cambiar
-// ui.colors.primary en app.config.ts los reescribe sin tocar aqui.
+// El degradado vive en @utility text-gradient (assets/css/main.css), que
+// ya lleva dentro background-clip y el color transparente. Aqui se repiten
+// por si el componente se usa fuera de la plantilla, y son idempotentes.
+//
+// El degradado arranca en --ui-primary, el alias que Nuxt UI cambia con el
+// tema (500 en light, 400 en dark), y termina en --ui-gradient-to, que
+// --ui-primary redefine a 400 y 300 respectivamente. Asi el degradado si
+// cambia entre light y dark, y cambiar ui.colors.primary en app.config.ts
+// lo reescribe entero sin tocar aqui.
 // ======================================================================
 
 type GradientTitleSize = 'sm' | 'md' | 'lg' | 'xl'
@@ -41,7 +45,7 @@ const sizeClass: Record<GradientTitleSize, string> = {
   <component
     :is="as"
     :class="[
-      'bg-clip-text text-gradient font-extrabold tracking-tight text-transparent text-balance',
+      'text-gradient font-extrabold tracking-tight text-balance',
       sizeClass[size],
       align === 'center' ? 'text-center' : 'text-left'
     ]"

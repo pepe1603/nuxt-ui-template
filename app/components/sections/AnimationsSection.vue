@@ -51,7 +51,7 @@ const ui = {
           :key="animation.value"
           :animation="animation.value"
           :delay="(index % 4) * 110"
-          :duration="650"
+          :duration="450"
         >
           <div class="flex h-full flex-col gap-4 rounded-xl bg-elevated border border-default p-5">
             <div class="flex items-center gap-2">

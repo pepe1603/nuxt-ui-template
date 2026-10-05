@@ -16,7 +16,7 @@ useSeoMeta({
     -->
     <RevealOnScroll
       animation="fade"
-      :duration="500"
+      :duration="400"
       once
     >
       <HeroSection />
@@ -53,7 +53,13 @@ useSeoMeta({
       <RepeatSection />
     </RevealOnScroll>
 
-    <RevealOnScroll animation="blur">
+    <!--
+      fade-up y no blur a proposito: `filter: blur()` obliga al navegador a
+      recomponer una capa del tamano de la seccion en cada frame, y aqui hay
+      22 imagenes remotas. La demo de blur vive en AnimationsSection, donde
+      el elemento es una tarjeta pequena y el filtro no se nota.
+    -->
+    <RevealOnScroll animation="fade-up">
       <ImagesSection />
     </RevealOnScroll>
 

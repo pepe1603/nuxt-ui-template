@@ -113,12 +113,12 @@ html {
 
 /* ==========================================================================
    AVISOS
-   Errores que ya se han pagado en este archivo. No son notas de estilo: son
-   fallos reales que se leen bien y aun asi hacen que la pagina parezca lenta
-   o rota. Si tocas este archivo, leelos antes.
+   Errores que ya se han pagado en este archivo o en RevealOnScroll. No son
+   notas de estilo: son fallos reales que se leen bien y aun asi hacen que la
+   pagina parezca lenta o rota. Si tocas estos ficheros, leelos antes.
 
    --------------------------------------------------------------------------
-   1. AVISOS DEL LSP EN text-gradient SON ESPERADOS
+   1. LOS AVISOS DEL LSP EN text-gradient SON ESPERADOS
    @nuxt/ui no emite --ui-color-primary-* ni --ui-primary en el CSS del
    proyecto: los inyecta en un <style> desde runtime (plugins/colors.js, con
    useHead). El LSP de Tailwind solo indexa el CSS compilado, asi que marca
@@ -129,209 +129,41 @@ html {
    2. NO CONSTRUYAS EL DEGRADADO CON SHADES CRUDOS
    --ui-color-primary-400 y -500 valen lo mismo en light y en dark. Un
    degradado con ellos parece que se adapta al tema y no se adapta. Solo
-   --ui-primary cambia de shade segun el tema.
+   --ui-primary cambia de shade segun el tema. La utilidad sale de ahi y
+   deriva el segundo extremo con color-mix, con lo que el degradado se
+   invierte solo en dark y queda una sola variable de Nuxt UI.
 
    --------------------------------------------------------------------------
-   3. filter: blur() NO ES GRATIS Y ESTA FUERA DEL COMPOSITOR
-   El navegador tiene que rasterizar y volver a filtrar toda el area del
-   elemento en cada frame. En una tarjeta pequena no se nota; sobre una
-   seccion con veinte imagenes, el frame rate se desploma. Si algo va lento,
-   mira primero si hay un blur animandose sobre algo grande.
-   Ademas: blur(0px) sigue siendo un filter, distinto de none. Deja bloque
-   contenedor para descendientes position:fixed y contexto de apilamiento, asi
-   que un tooltip o un modal dentro de un reveal con blur se posiciona mal.
-   Por eso ImagesSection anima fade-up y no blur.
-
-   --------------------------------------------------------------------------
-   4. UNA DURACION ANIMADA NO ES LO QUE DICE EL NUMERO SI LA SUMAS
+   3. UNA DURACION ANIMADA NO ES LO QUE DICE EL NUMERO SI LA SUMAS
    Los escalonamientos se suman a la duracion. Una entrada de 700ms cuyo
-   ultimo paso espera un 36% dura 952ms, no 700. Por eso app/utils/motion.ts
-   reparte la duracion entre los pasos en vez de repetirla en cada uno, y
-   duration es de verdad la duracion total de la entrada.
+   ultimo paso espera un 36% dura 952ms, no 700. En RevealOnScroll esto esta
+   resuelto: `duration` es la duracion de la entrada completa y no se suma
+   la secuencia encima. Los numeros de README y del componente son los
+   reales.
 
    --------------------------------------------------------------------------
-   5. prefers-reduced-motion SE RESUELVE AQUI, NO EN UN NODO
-   Las animaciones las pone @vueuse/motion con transition inline, asi que la
-   unica forma de anularlas es ganarles con especificidad. Por eso hace falta
-   este bloque: sin el, motion-reduce no hace nada, porque la transicion
-   inline gana a cualquier utilidad de Tailwind. Hay que usar !important, y
-   no es una concession estilistica: es lo unico que funciona contra un
-   estilo inline. Con esta base, si anades una animacion nueva con v-motion,
-   la preferencia del sistema se respeta sola y no hay ningun nodo del arbol
-   que recordar.   ========================================================================== */
+   4. NO ANULES transition-duration DE FORMA GLOBAL
+   Un `@media (prefers-reduced-motion: reduce)` con `* { transition-duration:
+   0.01ms !important }` parece la solucion universal, y no lo es: mataria
+   tambien las animaciones de Nuxt UI, que traen su propia transicion y su
+   propia logica de reduced motion, y lo haria sin avisar. Nada falla,
+   simplemente desaparece el movimiento de menus, tooltips y dialogos.
 
-@theme {
-  --font-sans: 'Inter', sans-serif;
-}
-
-/* ==========================================================================
-   TEMA
-   Una sola capa semantica: los tokens --ui-* de Nuxt UI.
-   Nuxt UI genera --ui-primary como --ui-color-primary-500 en light y
-   --ui-color-primary-400 en dark, asi que el switch 500/400 es automatico.
-   Aqui solo se sobreescriben los neutros y superficies.
-
-   PARA USAR OTRA MARCA:
-   1. Color de marca -> app.config.ts, campo ui.colors.primary
-   2. Neutros, superficies y bordes -> los bloques :root y .dark de abajo
-   ========================================================================== */
-
-:root {
-  /* Superficies: de la pagina hacia el elemento mas elevado */
-  --ui-bg: #ffffff;
-  --ui-bg-muted: #fafafa;
-  --ui-bg-elevated: #f4f4f5;
-  --ui-bg-accented: #e4e4e7;
-  --ui-bg-inverted: #18181b;
-
-  /* Texto: de mayor a menor enfasis */
-  --ui-text: #3f3f46;
-  --ui-text-muted: #71717a;
-  --ui-text-dimmed: #a1a1aa;
-  --ui-text-toned: #52525b;
-  --ui-text-highlighted: #18181b;
-  --ui-text-inverted: #ffffff;
-
-  /* Bordes */
-  --ui-border: #e4e4e7;
-  --ui-border-muted: #f4f4f5;
-  --ui-border-accented: #d4d4d8;
-  --ui-border-inverted: #18181b;
-}
-
-/* Negro apurado, no puro: la escalera de grises permite elevar superficies
-   y evita halation en el texto. Mantener este orden de luminosidad. */
-.dark {
-  --ui-bg: #0a0a0a;
-  --ui-bg-muted: #121212;
-  --ui-bg-elevated: #171717;
-  --ui-bg-accented: #262626;
-  --ui-bg-inverted: #fafafa;
-
-  --ui-text: #e4e4e7;
-  --ui-text-muted: #a1a1aa;
-  --ui-text-dimmed: #71717a;
-  --ui-text-toned: #d4d4d8;
-  --ui-text-highlighted: #fafafa;
-  --ui-text-inverted: #18181b;
-
-  --ui-border: #262626;
-  --ui-border-muted: #1c1c1c;
-  --ui-border-accented: #333333;
-  --ui-border-inverted: #fafafa;
-}
-
-/* Nuxt UI no cubre texto con gradiente, asi que se expone como utilidad.
-
-   Aqui hay una trampa que ya se pago dos veces, asi que queda escrita:
-
-   1. NO uses los shades crudos. --ui-color-primary-500 y -400 son valores
-      FIJOS de la paleta: son los mismos en light y en dark, asi que un
-      degradado armado con ellos no se adapta nunca. Lo que cambia con el
-      tema es el alias --ui-primary (500 en light, 400 en dark), y lo cambia
-      plugins/colors.js del propio @nuxt/ui.
-
-   2. De una sola variable. El segundo extremo se deriva con color-mix en vez
-      de declarar un token por tema: menos superficie que mantener, y el
-      degradado se invierte solo porque parte de --ui-primary, que ya es mas
-      claro en dark.
-
-   3. El recorte y el color van DENTRO de la utilidad. Una que se llama
-      text-gradient tiene que verse sola, y no depender de que otro se acuerde
-      de anadir text-transparent y bg-clip-text: si se olvida, el color del
-      texto tapa el fondo y el degradado no se ve.
-
-   4. AVISO DEL EDITOR ESPERADO. El LSP de Tailwind marca "Cannot resolve
-      --ui-primary custom property" mas abajo, y no es un fallo: @nuxt/ui
-      genera esos tokens en un <style> inyectado por JS con useHead, no en el
-      CSS del proyecto, asi que el editor no puede indexarlos. En el navegador
-      la variable esta definida y el degradado se pinta. Si alguna vez no se
-      viera, el fallo no seria de esta utilidad, sino que el token no llego a
-      definirse. */
-@utility text-gradient {
-  background-image: linear-gradient(
-    to right,
-    var(--ui-primary),
-    color-mix(in oklab, var(--ui-primary) 55%, white)
-  );
-  background-clip: text;
-  color: transparent;
-}
-
-html {
-  background-color: var(--ui-bg);
-  color: var(--ui-text);
-}
-
-/* ==========================================================================
-   AVISOS
-   Errores que ya se han pagado en este archivo. No son notas de estilo: son
-   fallos reales que se leen bien y aun asi hacen que la pagina parezca lenta
-   o rota. Si tocas este archivo, leelos antes.
+   Lo correcto son las utilidades `motion-reduce` de Tailwind, aplicadas en
+   la clase del propio elemento. RevealOnScroll las trae en sus estados, y
+   por eso su bloque de reduced motion esta junto a ellos. Si anades una
+   animacion fuera de ese componente, ponle su `motion-reduce` en la misma
+   clase.
 
    --------------------------------------------------------------------------
-   1. AVISOS DEL LSP EN text-gradient SON ESPERADOS
-   @nuxt/ui no emite --ui-color-primary-* ni --ui-primary en el CSS del
-   proyecto: los inyecta en un <style> desde runtime (plugins/colors.js, con
-   useHead). El LSP de Tailwind solo indexa el CSS compilado, asi que marca
-   "Cannot resolve" en cualquier token --ui-*. No lo toques para callarlo:
-   devolveria el problema de verdad, que es que la variable no existe.
+   5. filter: blur() NO ES GRATIS Y ESTA FUERA DEL COMPOSITOR
+   El navegador rasteriza y vuelve a filtrar toda el area del elemento en
+   cada frame. En una tarjeta pequena no se nota; sobre una seccion con
+   veinte imagenes el frame rate se desploma. Si algo va lento, mira primero
+   si hay un blur animandose sobre algo grande.
 
-   --------------------------------------------------------------------------
-   2. NO CONSTRUYAS EL DEGRADADO CON SHADES CRUDOS
-   --ui-color-primary-400 y -500 valen lo mismo en light y en dark. Un
-   degradado con ellos parece que se adapta al tema y no se adapta. Solo
-   --ui-primary cambia de shade segun el tema.
-
-   --------------------------------------------------------------------------
-   3. filter: blur() NO ES GRATIS Y ESTA FUERA DEL COMPOSITOR
-   El navegador tiene que rasterizar y volver a filtrar toda el area del
-   elemento en cada frame. En una tarjeta pequena no se nota; sobre una
-   seccion con veinte imagenes, el frame rate se desploma. Si algo va lento,
-   mira primero si hay un blur animandose sobre algo grande.
    Ademas: blur(0px) sigue siendo un filter, distinto de none. Deja bloque
-   contenedor para descendientes position:fixed y contexto de apilamiento, asi
-   que un tooltip o un modal dentro de un reveal con blur se posiciona mal.
-   Por eso ImagesSection anima fade-up y no blur.
-
-   --------------------------------------------------------------------------
-   4. UNA DURACION ANIMADA NO ES LO QUE DICE EL NUMERO SI LA SUMAS
-   Los escalonamientos se suman a la duracion. Una entrada de 700ms cuyo
-   ultimo paso espera un 36% dura 952ms, no 700. Por eso app/utils/motion.ts
-   reparte la duracion entre los pasos en vez de repetirla en cada uno, y
-   duration es de verdad la duracion total de la entrada.
-
-   --------------------------------------------------------------------------
-   5. prefers-reduced-motion NO ES AUTOMATICO
-   Depende del <MotionConfig reduced-motion="user"> de app/app.vue. Sin ese
-   nodo, toda la app se mueve igual y no salta ningun error. Si animaciones
-   que deberian respetando la preferencia del sistema no lo hacen, el primer
-   sitio donde mirar es ese nodo, no el CSS de aqui.
+   contenedor para descendientes position:fixed y contexto de apilamiento,
+   asi que un tooltip o un modal dentro de un reveal con blur se posiciona
+   mal. Por eso ImagesSection anima fade-up y no blur.
    ========================================================================== */
-
-/* ==========================================================================
-   REDUCED MOTION
-   La transicion la escribe @vueuse/motion en el atributo style del elemento,
-   y un estilo inline gana siempre a una utilidad de Tailwind. Por eso este
-   bloque necesita !important: no es una concession de estilo, es lo unico
-   que gana contra un estilo inline.
-
-   Se anula transition y transition-duration, y no los estados: asi el
-   contenido se coloca igual, solo que sin moverse. Anular transform
-   dejaria el bloque desplazado 56px si no se neutraliza tambien su estado.
-
-   Si alguna animacion no respeta la preferencia del sistema, mira aqui
-   antes que en el componente: casi siempre sera que la transicion se
-   declara por una via que no entra en este selector. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    transition-delay: 0ms !important;
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-  }
-}

@@ -10,13 +10,13 @@ useSeoMeta({
 <template>
   <UPage>
     <!--
-      El hero va envuelto, y con duration corta y sin retardo porque esta
-      por encima del fold: la entrada se ve como una carga, no como un
-      scroll. once para que no desaparezca al bajar.
+      El hero va sin retardo porque esta por encima del fold: el observer
+      dispara en el primer frame y la entrada se ve como una carga, no como
+      un scroll. once=true para que no desaparezca al bajar.
     -->
     <RevealOnScroll
       animation="fade"
-      :duration="300"
+      :duration="500"
       once
     >
       <HeroSection />
@@ -53,7 +53,7 @@ useSeoMeta({
       <RepeatSection />
     </RevealOnScroll>
 
-    <RevealOnScroll animation="fade-up">
+    <RevealOnScroll animation="blur">
       <ImagesSection />
     </RevealOnScroll>
   </UPage>

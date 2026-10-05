@@ -159,71 +159,21 @@ decide *cómo*; ninguna de las dos capas conoce a la otra.
 
 | Prop | Valores | Default |
 | --- | --- | --- |
-| `animation` | `fade`, `fade-up`, `fade-down`, `from-left`, `from-right`, `zoom-in`, `zoom-out` | `fade-up` |
+| `animation` | `fade`, `fade-up`, `fade-down`, `from-left`, `from-right`, `zoom-in`, `zoom-out`, `blur` | `fade-up` |
 | `easing` | `out`, `in-out`, `soft`, `back` | `soft` |
-| `duration` | milisegundos | `450` |
+| `sequence` | `together`, `lead`, `staged` | `staged` |
+| `duration` | milisegundos | `700` |
 | `delay` | milisegundos | `0` |
-| `once` | booleano | `true` |
+| `once` | booleano | `false` |
 
-`once: true` usa la variante `visibleOnce` y el bloque solo entra la primera
-vez. `once: false` usa `visible` y se oculta al salir del viewport para volver
-a animarse cada vez que regresa. Son dos variantes distintas, no un parámetro
-que la librería interprete, y por eso el prop se llama `once`. El default es
-`true` porque con `false` un scroll normal hace entrar y salir bloques
-seguidos y la página se lee como que va a destiempo; `RepeatSection` lo pone a
-`false` a propósito, porque es justo lo que quiere demostrar.
+Con `once: false` el bloque se oculta al salir de la pantalla y vuelve a
+animarse cada vez que regresa. `sequence` encadena las propiedades dentro de una
+misma entrada —primero la opacidad, después el desplazamiento— y la salida se
+resuelve más rápido y sin encadenar. La coreografía está en
+`app/utils/reveal.ts`.
 
-El escalonado se hace con `delay`, uno por elemento. No hay cadena de
-propiedades ni retardo por clave: con una transición CSS no hace falta, y cada
-paso con su propio retardo hacía que una entrada de 700 ms tardara 952 ms sin
-que nada pareciera roto.
-
-Los estados están en `app/utils/motion.ts` como utilidades de Tailwind, fuera
-del componente, para que el typecheck cubra los nombres y la página de ejemplo
-muestre los valores reales. No hay `blur`: `filter` va fuera del compositor y
-obliga a rasterizar el elemento entero en cada frame.
-
-### El estado inicial va en la variante, no en una clase
-
-Es lo contrario de lo que parece, y es lo que evita que la página arranque
-con huecos:
-
-```ts
-// Esto pinta el bloque INVISIBLE en el HTML del servidor, y el contenido se
-// queda en un hueco hasta que hidrata: style="opacity:0" en el primer byte.
-// initial: hiddenState[animation],
-```
-
-```ts
-// Con la variante, el servidor pinta el bloque VISIBLE y la animación solo
-// ocurre si el bloque estaba de verdad fuera de la pantalla al cargar.
-initial: hiddenState[animation],
-visibleOnce: {}
-```
-
-### `prefers-reduced-motion` se resuelve en CSS
-
-No hay ningún nodo del árbol que mantener. Como la transición la escribe la
-librería en el atributo `style` del elemento, la única forma de anularla es
-ganarle en especificidad, y para eso hace falta `!important` en el bloque
-`@media` del final de `app/assets/css/main.css`. Si añades una animación, la
-preferencia del sistema se respeta sola.
-
-### Lo que esta librería no tiene
-
-Se eligió `@vueuse/motion` sobre `motion-v` (Framer Motion para Vue) por
-simplez, así que hay cosas que no están y no hay que buscar:
-
-- **Sin exit animations.** No hay `AnimatePresence`, así que un bloque que se
-  desmonta no se anima al salir.
-- **Sin gestos.** No hay `drag`, ni `whileDrag`, ni `whileTap`.
-- **Sin layout.** No hay `layout` ni `layoutId`.
-
-Para eso, `motion-v` es la opción: es la librería de Framer Motion para Vue y
-tiene las tres. El coste es el que se vio al usarla: `whileInView` con margen,
-variantes tipadas y un `MotionConfig` del que depende toda la app. Si este
-proyecto llegara a necesitar salidas animadas, cambiar de librería es el
-movimiento natural, y el componente está aislado para ese efecto.
+Respeta `prefers-reduced-motion`: cada animación declara su propio reset de
+`motion-reduce`, sin tocar la lógica.
 
 ## Imágenes
 

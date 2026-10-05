@@ -175,6 +175,12 @@ resuelve más rápido y sin encadenar. La coreografía está en
 Respeta `prefers-reduced-motion`: cada animación declara su propio reset de
 `motion-reduce`, sin tocar la lógica.
 
+Un aviso que no sale de la API: `isVisible` empieza en `false`, así que el
+servidor siempre escribe el bloque en su estado oculto, aunque esté por encima
+del fold. Sin JavaScript ese contenido no aparece nunca. En el `HeroSection` se
+compensa con `once` y una duración corta, y la sección *La primera pantalla*
+del sitio explica el trade-off entero.
+
 ## Imágenes
 
 `@nuxt/image` con **ipx**, el proveedor por defecto. El src es una URL absoluta:

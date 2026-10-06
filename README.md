@@ -302,6 +302,99 @@ trabajo se quedan en local. Ver [CONTRIBUTING.md](./CONTRIBUTING.md).
 [MIT](./LICENSE) — usala libremente en proyectos personales y comerciales. Si
 modificas la plantilla, no tenés que publicar los cambios.
 
+## Prompt para agentes
+
+Copia el bloque de abajo y pásaselo tal cual a Claude, Cursor, Copilot o
+cualquier otro agente que vaya a trabajar en esta plantilla. Está escrito para
+un agente con acceso al repo: describe el stack, las reglas que no se negocian y
+las trampas que ya están pagadas.
+
+````markdown
+# Contexto
+
+Plantilla base de Nuxt 4 + Nuxt UI v4. Tailwind v4 vía `@nuxt/ui`, tokens
+semánticos en `app/assets/css/main.css`, y una página `/` que hace de
+documentación viva del sistema de diseño.
+
+## Stack
+
+- **Nuxt UI v4** como librería de componentes. Antes de añadir un componente a
+  mano, comprueba si Nuxt UI ya lo tiene.
+- **`vue3-carousel`** para carruseles (`AppCarousel`, `GalleryCarousel`).
+  Sustituyó a `UCarousel`; no lo vuelvas a usar.
+- **`@vueuse/motion`** solo donde un valor tiene que seguir moviéndose.
+- **`@nuxt/image`** con `NuxtImg`. Todo host remoto va en `image.domains`.
+- **Gestor de paquetes: `pnpm`.** Nunca `npm install`, nunca crees un
+  `package-lock.json`.
+
+## Reglas que no se negocian
+
+1. **Tokens semánticos, nunca shades crudos.** Escribe `text-highlighted`,
+   `bg-elevated`, `ring-primary`. Jamás `text-neutral-700` ni
+   `var(--ui-color-primary-500)`: los shades son valores fijos, iguales en
+   light y en dark, y no se adaptan. Lo que cambia con el tema es el alias
+   (`--ui-primary` es 500 en light y 400 en dark).
+
+2. **`RevealOnScroll` para entradas de scroll, `@vueuse/motion` para lo demás.**
+   Una entrada de 700 ms no necesita un módulo de animación. Y `v-motion` nunca
+   va *sobre* un componente de Nuxt UI: va en un `<div>` propio.
+
+3. **Respeta `prefers-reduced-motion` en toda animación.** Las componentes
+   propias lo consultan con `useMediaQuery`.
+
+4. **Nada de librerías nuevas** sin justificarlo antes. La plantilla está
+   completa a propósito.
+
+5. **Un `UContainer` por página.** `UHeader` y `UFooter` ya traen el suyo, y
+   `UPageSection` envuelve en otro: meterlo dentro es doble centrado.
+
+6. **Comentarios explicando el *porqué*, en español y en la tongue del
+   proyecto.** Cuando algo parezca absurdo, la respuesta suele estar escrita
+   justo encima. Si una explicación queda desfasada, corrígela: está peor un
+   motivo falso que ningún motivo.
+
+## Trampas ya pagadas
+
+- **Las clases de Tailwind construidas con interpolación se purgan.**
+  `:ui="{ root: \`[--duration:${duration}s]\` }"` no existe para Tailwind: la
+  animación sale con el valor por defecto del tema, sin error ni aviso. Las
+  custom properties van en `:style`.
+- **`v-model` en `vue3-carousel`, no `v-model:currentSlide`.** La librería no
+  tiene ese prop ni ese evento; solo emite `update:modelValue`. Con el nombre
+  equivocado nada falla, simplemente no se mueve.
+- **Los `.d.ts` de `vue3-carousel` solo declaran los props**, no el `expose`.
+  `slideTo`, `next` y `prev` existen en runtime pero TS2339. Tipa el ref:
+  `useTemplateRef<CarouselApi>('main')`.
+- **Nada de `filter` ni de ancestros transformados sobre elementos `fixed` o
+  sobre los `position: absolute` de los carruseles.** Un `filter` crea bloque
+  contenedor y las flechas se posicionan mal. Por eso `blur` no se combina.
+- **Los degradados de `UMarquee` se salen de su caja.** La sección necesita
+  `overflow-hidden` o aparece scroll horizontal en toda la página.
+- **Las APIs copiadas de `swiper` o de Embla no existen aquí.** Antes de usar
+  un prop o un evento de un ejemplo de internet, verifícalo en
+  `node_modules/<lib>/dist/*.d.ts`.
+
+## Antes de terminar
+
+```bash
+npx eslint .
+```
+
+No corras `build`, `typecheck`, el dev server ni hagas render. La verificación
+de esta plantilla es estática.
+
+## Si algo no cuadra
+
+Antes de "arreglarlo", comprueba si es un bug real o un `.d.ts` o un ejemplo
+de internet que miente. Pasa con frecuencia, y el arreglo correcto suele ser
+documentarlo, no tocar el código.
+
+## Git
+
+Rama de trabajo desde `develop`, nunca en `develop` directamente. Se integra
+con `git merge --no-ff` a `develop`. `main` solo recibe releases, con tag.
+````
+
 ## Documentación
 
 - [Nuxt UI](https://ui.nuxt.com)

@@ -88,6 +88,12 @@ const slides = [
       Y NO lleva HeroSection aqui, aunque lo lleve la portada: sus enlaces
       apuntan a #texto, que es una seccion del indice. En /carrusel ese ancla
       no lleva a ninguna parte.
+
+      Y NO lleva UPageSection alrededor. UPageSection envuelve su contenido en
+      un UContainer, y aqui ya hay uno: el del layout. Meterlo dentro seria
+      el doble centrado, con el px del contenedor duplicado y el contenido
+      re-centrado dentro de una caja que ya venia centrada. Para esto
+      UPageHeader va directo, porque no necesita ancho: hereda el del layout.
     -->
     <RevealOnScroll
       animation="fade"

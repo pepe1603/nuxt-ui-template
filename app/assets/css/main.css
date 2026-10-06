@@ -45,6 +45,17 @@
   --ui-border-muted: #f4f4f5;
   --ui-border-accented: #d4d4d8;
   --ui-border-inverted: #18181b;
+
+  /* Ancho del contenido. Es el unico sitio donde se decide: el header, el
+     contenido y el footer lo leen de aqui, asi que cambiar este numero los
+     mueve a los tres.
+
+     Nuxt UI lo pone a 80rem, y con el font-size por defecto de 16px eso ya
+     son 1280px. O sea, este valor es el que ya venia, escrito aqui para que
+     el ancho sea una decision del proyecto y no un default que nadie ha
+     mirado. En px, no en rem, a proposito: si el usuario cambia el tamano
+     de fuente base, el ancho del contenido no deberia moverse con el. */
+  --ui-container: 1280px;
 }
 
 /* Negro apurado, no puro: la escalera de grises permite elevar superficies
@@ -109,6 +120,59 @@
 html {
   background-color: var(--ui-bg);
   color: var(--ui-text);
+
+  /* El UA stylesheet ya le pone view-transition-name: root al elemento raiz,
+     pero se declara aqui para que el reveal circular no dependa de ese
+     default: si alguien resetea la propiedad, el nombre se pierde y la
+     animacion deja de aplicarse sin ningun error visible. */
+  view-transition-name: root;
+}
+
+/* ==========================================================================
+   VIEW TRANSITIONS: CAMBIO DE TEMA
+   Lo que se ve al pulsar el boton de tema no es una transicion de color: es
+   el tema nuevo entrando por un recorte circular que se abre desde el punto
+   del click. La pagina real no se anima, se congela en dos capturas y el
+   navegador interpola entre ellas.
+
+   --------------------------------------------------------------------------
+   POR QUE LA GEOMETRIA VIENE DE JS Y LA ANIMACION NO
+   Las tres medidas dependen del raton, asi que no pueden estar escritas aqui:
+   --theme-x, --theme-y y --theme-radius las pone ColorModeToggle.vue en el
+   elemento raiz antes de llamar a startViewTransition. La animacion si esta
+   aqui, porque no se puede animar un pseudo-elemento desde JS: no es un
+   elemento y no tiene instancia de Element.
+
+   Los valores por defecto del var() son un centro y un radio de 150vmax, que
+   es mas que la diagonal de cualquier pantalla. Sirven para que la
+   animacion siga siendo valida aunque falten las variables, en lugar de
+   degradar a un circle(0px) que no revela nada.
+   ========================================================================== */
+
+::view-transition-old(root) {
+  /* Sin el fade-out del UA, para que la imagen vieja se quede fija debajo y
+     sea el reveal del nuevo lo unico que se mueve. */
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  /* El UA pone plus-lighter, pensado para que el cross-fade de dos capturas
+     a media opacidad sume luz correctamente. Aqui no hay cross-fade: la
+     vieja esta opaca y la nueva encima recortada. Con plus-lighter la zona
+     de solape se va a blanco y el reveal se ve como un fogonazo. */
+  mix-blend-mode: normal;
+  animation: theme-clip-reveal 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes theme-clip-reveal {
+  from {
+    clip-path: circle(0px at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+
+  to {
+    clip-path: circle(var(--theme-radius, 150vmax) at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
 }
 
 /* ==========================================================================
@@ -166,4 +230,20 @@ html {
    contenedor para descendientes position:fixed y contexto de apilamiento,
    asi que un tooltip o un modal dentro de un reveal con blur se posiciona
    mal. Por eso ImagesSection anima fade-up y no blur.
+
+   --------------------------------------------------------------------------
+   6. UNA TRANSITION CSS DURANTE UN VIEW TRANSITION ROMPE EL COLOR
+   Las dos cosas viven a la vez y el navegador no las coordina. Al cambiar de
+   tema con las transiciones CSS activas, Nuxt UI pone su fondo en marcha
+   hacia el color nuevo y la API captura el estado nuevo en ese mismo frame,
+   con el color a medio camino: la instantanea sale mezclada entre los dos
+   temas y el reveal circular descubre el tema viejo encima del viejo. El
+   tema no cambia hasta que la transicion acaba, y de golpe.
+
+   Por eso colorMode.disableTransition va en true en nuxt.config.ts, aunque
+   el default sea false. Con true, @nuxtjs/color-mode inyecta
+   `* { transition: none !important }` al cambiar de tema y lo retira al
+   siguiente frame: el intercambio es instantaneo y el recorte se encarga de
+   la unica animacion. Ese asterisco no alcanza a los pseudo-elementos de la
+   transicion, asi que el reveal sigue teniendo sus 500ms.
    ========================================================================== */

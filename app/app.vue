@@ -28,106 +28,34 @@ useHead({
 // ======================================================================
 
 const toaster = useToasterOptions()
-
-// El boton de buscar y la paleta comparten este estado. Vive en
-// utils/commandPalette.ts porque lo consumen dos componentes distintos, y
-// por eso no puede ser un ref local de ninguno de los dos.
-const isCommandPaletteOpen = useCommandPalette()
 </script>
 
 <template>
   <UApp :toaster="toaster">
-    <UHeader>
-      <template #left>
-        <!-- Icono del proyecto. Reemplaza por tu logo. -->
-        <NuxtLink
-          to="/"
-          class="flex items-center gap-2 rounded-md p-1.5 -ms-1 hover:outline-1 outline-primary/25"
-        >
-          <UIcon
-            name="i-simple-icons-nuxtdotjs"
-            class="text-primary size-5"
-          />
+    <!--
+      El shell (cabecera, contenido, pie) vive en layouts/default.vue, no
+      aqui. Nuxt elige layout por pagina, asi que una pagina puede salirse del
+      contenedor con `definePageMeta({ layout: false })`; con el shell en
+      app.vue no habria forma de tener una pagina a sangre.
 
-          <span class="font-semibold">
-            Template
-          </span>
-        </NuxtLink>
-
-        <!-- Paginas de ejemplo del template. Quitalas al empezar un
-             proyecto de verdad: no aportan nada a la aplicacion. -->
-        <UButton
-          to="/formulario"
-          label="Formulario"
-          size="xs"
-          color="neutral"
-          variant="ghost"
-        />
-
-        <UButton
-          to="/carrusel"
-          label="Carrusel"
-          size="xs"
-          color="neutral"
-          variant="ghost"
-        />
-      </template>
-
-      <template #right>
-        <!-- Abre la paleta global. Es el mismo estado que el atajo
-             ⌘K / Ctrl+K, asi que los dos caminos hacen lo mismo. -->
-        <UButton
-          icon="i-lucide-search"
-          aria-label="Buscar"
-          color="neutral"
-          variant="ghost"
-          @click="isCommandPaletteOpen = true"
-        />
-
-        <UColorModeButton />
-
-        <UButton
-          to="https://github.com"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
-      </template>
-    </UHeader>
-
-    <UMain>
+      <NuxtLayout> se renderiza por debajo de <NuxtPage>, asi que el orden del
+      DOM es el mismo que antes: header, contenido, pie.
+    -->
+    <NuxtLayout>
       <NuxtPage />
-    </UMain>
+    </NuxtLayout>
 
-    <USeparator />
+    <!--
+      Va aqui y FUERA de UPage, al final del template.
 
-    <UFooter>
-      <template #left>
-        <p class="text-muted text-sm">
-          © {{ new Date().getFullYear() }}
-        </p>
-      </template>
+      Fuera de UPage porque es global: si viviera dentro, solo habria paleta
+      en la pagina actual. Y al final para que en el orden del DOM quede
+      despues del contenido, que es como debe estar una capa que se abre
+      encima de todo.
 
-      <template #right>
-        <p class="text-dimmed text-sm">
-          Nuxt 4 · Nuxt UI · Tailwind v4
-        </p>
-      </template>
-    </UFooter>
+      No hace falta ningun <ClientOnly>: el modal no se pinta hasta que se
+      abre, asi que en el servidor no hay nada que hydratear.
+    -->
+    <AppCommandPalette />
   </UApp>
-
-  <!--
-    Va aqui y FUERA de UPage, al final del template.
-
-    Fuera de UPage porque es global: si viviera dentro, solo habria paleta
-    en la pagina actual. Y al final para que en el orden del DOM quede
-    despues del contenido, que es como debe estar una capa que se abre
-    encima de todo.
-
-    No hace falta ningun <ClientOnly>: el modal no se pinta hasta que se
-    abre, asi que en el servidor no hay nada que hydratear.
-  -->
-  <AppCommandPalette />
 </template>

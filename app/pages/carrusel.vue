@@ -20,7 +20,7 @@
 // azar.
 useSeoMeta({
   title: 'Carrusel',
-  description: 'Carrusel de vue3-carousel con las tarjetas que se ven a la vez decididas por breakpoint.'
+  description: 'Carrusel de vue3-carousel, solo imagenes. Cuantas se ven a la vez lo decide itemsToShow.'
 })
 
 // Las imagenes de picsum van con su host en la lista de domains de
@@ -42,50 +42,32 @@ const slides = [
   {
     image: 'https://picsum.photos/id/1015/1200/800',
     title: 'Rio entre montanas',
-    description: 'itemsToShow 1: una imagen entera, la opcion para una portada o un anuncio.',
-    alt: 'Rio caudaloso entre laderas rocosas',
-    icon: 'i-lucide-mountain',
-    to: '#'
+    alt: 'Rio caudaloso entre laderas rocosas'
   },
   {
     image: 'https://picsum.photos/id/1016/1200/800',
     title: 'Caminos de tierra',
-    description: 'Con breakpoints, dos tarjetas desde tablet y una sola en movil.',
-    alt: 'Senda de tierra entre vegetacion',
-    icon: 'i-lucide-route',
-    to: '#'
+    alt: 'Senda de tierra entre vegetacion'
   },
   {
     image: 'https://picsum.photos/id/1018/1200/800',
     title: 'Valle con niebla',
-    description: 'La imagen va con aspect-video para que todas las tarjetas miden igual.',
-    alt: 'Valle cubierto de niebla al amanecer',
-    icon: 'i-lucide-cloud-fog',
-    to: '#'
+    alt: 'Valle cubierto de niebla al amanecer'
   },
   {
     image: 'https://picsum.photos/id/1019/1200/800',
     title: 'Costa recortada',
-    description: 'Flechas y puntos vienen puestos. Se desactivan con arrows y dots.',
-    alt: 'Acantilados junto al mar',
-    icon: 'i-lucide-waves',
-    to: '#'
+    alt: 'Acantilados junto al mar'
   },
   {
     image: 'https://picsum.photos/id/1024/1200/800',
     title: 'Lobo en la nieve',
-    description: 'loop:true hace que la última esté enlazada con la primera.',
-    alt: 'Lobo blanco sobre nieve profunda',
-    icon: 'i-lucide-paw-print',
-    to: '#'
+    alt: 'Lobo blanco sobre nieve profunda'
   },
   {
     image: 'https://picsum.photos/id/1039/1200/800',
     title: 'Cascada entre rocas',
-    description: 'Con autoplay delay: 3000ms aquí, el intervalo va dentro del objeto.',
-    alt: 'Cascada cayendo entre rocas oscuras',
-    icon: 'i-lucide-waves',
-    to: '#'
+    alt: 'Cascada cayendo entre rocas oscuras'
   }
 ]
 </script>

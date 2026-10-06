@@ -35,7 +35,7 @@
 // carrusel de abajo saltaria a cada fotograma. Con :model-value la grande es
 // la unica que escribe.
 // ======================================================================
-defineProps<{
+const props = defineProps<{
   /** URLs de las imagenes, en orden. */
   images: string[]
   /** Texto alternativo base. Se numera solo si falta el de la imagen. */
@@ -52,6 +52,79 @@ const main = useTemplateRef('main')
 function goTo(index: number) {
   main.value?.slideTo(index)
 }
+
+// ======================================================================
+// LIGHTBOX
+//
+// Dos estados y no uno: `lightbox` es el interruptor y `lightboxImg` la URL
+// abierta. Podria guardar solo el indice y deducir la imagen, pero entonces
+// abrir necesita dos pasos y el `@click.self` que cierra dependeria de
+// comparar strings en vez de un booleano. Con los dos, abrir y cerrar son
+// asignaciones directas.
+//
+// OJO con el nombre de la URL en los indices: `lightboxImg` guarda la URL,
+// no la posicion. Por eso los botones de abajo buscan el indice con
+// indexOf antes de moverse.
+const lightbox = ref(false)
+const lightboxImg = ref('')
+
+// ----------------------------------------------------------------------
+// POR QUE EL FONDO ES UN DIV CON @click.self Y NO UN UModal
+//
+// UModal ya hace todo esto: fondo, cierre con Escape, foco atrapado, bloqueo
+// del scroll del body. Se podria usar y seria menos codigo.
+//
+// La razon para no usarlo es el scroll del body. UModal lo bloquea, y al
+// cerrarse lo restaura; este overlay no lo hace, asi que abrir la imagen
+// grande sobre una pagina que ya tiene scroll deja el fondo movible. Es un
+// ejemplo de demo, asi que el div plano va bien. En una app de verdad, UModal
+// es lo correcto aqui y estos ~20 lineas sobrarian.
+// ----------------------------------------------------------------------
+
+// El indice de la imagen abierta. -1 cuando el lightbox esta cerrado.
+const lightboxIndex = computed(() => props.images.indexOf(lightboxImg.value))
+
+function openLightbox(image: string) {
+  lightboxImg.value = image
+  lightbox.value = true
+}
+
+function closeLightbox() {
+  lightbox.value = false
+}
+
+// El bucle da la vuelta al final. Sin el % , el boton de siguiente se
+// quedaria sin efecto en la ultima imagen y pareceria roto.
+function stepLightbox(delta: number) {
+  const total = props.images.length
+  const from = lightboxIndex.value
+
+  if (from === -1 || total === 0) {
+    return
+  }
+
+  lightboxImg.value = props.images[(from + delta + total) % total]!
+}
+
+// Escape cierra. Se registra en la ventana y no en el div porque el div
+// cierra con @click.self, y con el teclado no hay ningun "self".
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    closeLightbox()
+  }
+}
+
+// Un solo listener para toda la vida del componente, no uno por apertura.
+// addEventListener con la MISMA funcion es idempotente, asi que aunque se
+// llamara dos veces no habria doble respuesta; y registrar en onMounted
+// evita tocar `window` durante el render, que en SSR no existe.
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
@@ -81,8 +154,20 @@ function goTo(index: number) {
           El contenedor del Slide lleva el recorte y el ratio; la imagen solo
           object-cover. Si el ratio fuera a la imagen, el borde redondeado la
           dejaria asomar por fuera en algunos navegadores.
+
+          El cursor y el hover van en el div, no en la imagen: si fueran en la
+          imagen, solo se verian sobre los pixeles que la imagen ocupa,
+          y el hover se encenderia y apagaria al mover el raton por encima.
         -->
-        <div class="aspect-video w-full overflow-hidden rounded-xl">
+        <div
+          class="aspect-video w-full cursor-pointer overflow-hidden rounded-xl transition-transform duration-300 hover:scale-105"
+          role="button"
+          tabindex="0"
+          :aria-label="`Ampliar imagen ${index + 1} de ${images.length}`"
+          @click="openLightbox(image)"
+          @keydown.enter="openLightbox(image)"
+          @keydown.space.prevent="openLightbox(image)"
+        >
           <NuxtImg
             :src="image"
             :alt="`${alt ? alt + ' ' : ''}${index + 1} de ${images.length}`"
@@ -176,4 +261,70 @@ function goTo(index: number) {
       {{ current + 1 }} / {{ images.length }}
     </p>
   </div>
+
+  <!--
+    Lightbox. Va FUERA del div de la galeria, como hermano, y no dentro: si
+    estuviera dentro, el overlay quedaria dentro del .carousel y la libreria
+    lo moveria con el track al arrastrar. Tambien estaria dentro del
+    RevealOnScroll de la pagina, y ese tiene un transform, que es bloque
+    contenedor para fixed: el overlay se mediria contra la seccion y no
+    contra la ventana, y con la pagina desplazada apareceria a medio camino.
+
+    El v-if va en el Transition y no en el div, que es como Vue espera: si el
+    v-if estuviera en el div, el Transition no tendria nada que animar al
+    aparecer y la entrada no se veria.
+  -->
+  <Transition name="lightbox-fade">
+    <div
+      v-if="lightbox"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="`Imagen ampliada ${lightboxIndex + 1} de ${images.length}`"
+      @click.self="closeLightbox"
+    >
+      <!--
+        max-h y max-w en vez de h-full: con h-full la imagen se estiraria a
+        la altura de la ventana y se deformaria, porque el ratio se pierde.
+        object-contain mantiene el ratio dejando el hueco que sobre.
+      -->
+      <NuxtImg
+        :src="lightboxImg"
+        :alt="`${alt ? alt + ' ' : ''}${lightboxIndex + 1} de ${images.length}`"
+        class="max-h-screen max-w-screen rounded-xl object-contain shadow-2xl"
+      />
+
+      <UButton
+        icon="i-lucide-x"
+        color="white"
+        variant="ghost"
+        size="xl"
+        class="absolute right-4 top-4 rounded-full"
+        aria-label="Cerrar"
+        @click="closeLightbox"
+      />
+
+      <UButton
+        v-if="images.length > 1"
+        icon="i-lucide-chevron-left"
+        color="white"
+        variant="ghost"
+        size="xl"
+        class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full"
+        aria-label="Imagen anterior"
+        @click="stepLightbox(-1)"
+      />
+
+      <UButton
+        v-if="images.length > 1"
+        icon="i-lucide-chevron-right"
+        color="white"
+        variant="ghost"
+        size="xl"
+        class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full"
+        aria-label="Imagen siguiente"
+        @click="stepLightbox(1)"
+      />
+    </div>
+  </Transition>
 </template>

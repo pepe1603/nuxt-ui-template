@@ -176,6 +176,33 @@ html {
 }
 
 /* ==========================================================================
+   TRANSICION lightbox-fade DE VUE
+   La usa GalleryCarousel con `<Transition name="lightbox-fade">`.
+
+   Vue no trae estas clases: hay que declararlas, y las cuatro hacen falta.
+   Falta la -enter-from y la animacion se ve como un fogonazo; falta la
+   -enter-active y la opacidad no interpola.
+
+   El nombre lleva el prefijo a proposito. Las clases de <Transition> son
+   GLOBALES aunque el .vue tenga scope, asi que un nombre corto como `fade` se
+   pisa con cualquier otro Transition del mismo nombre en la pagina. Ver el
+   aviso 7 del bloque de avisos de mas abajo.
+   ========================================================================== */
+
+.lightbox-fade-enter-active {
+  transition: opacity 0.2s ease;
+}
+
+.lightbox-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.lightbox-fade-enter-from,
+.lightbox-fade-leave-to {
+  opacity: 0;
+}
+
+/* ==========================================================================
    AVISOS
    Errores que ya se han pagado en este archivo o en RevealOnScroll. No son
    notas de estilo: son fallos reales que se leen bien y aun asi hacen que la
@@ -246,4 +273,23 @@ html {
    siguiente frame: el intercambio es instantaneo y el recorte se encarga de
    la unica animacion. Ese asterisco no alcanza a los pseudo-elementos de la
    transicion, asi que el reveal sigue teniendo sus 500ms.
+
+   --------------------------------------------------------------------------
+   7. <Transition name="fade"> USA CLASES GLOBALES, Y "fade" ES UN NOMBRE
+   QUE CHOCA FACILMENTE
+   Las clases .fade-enter-active y .fade-enter-from las escribe Vue en el
+   documento, no dentro del componente: son globales, aunque el
+   <Transition> este en un .vue con scope. Dos Transition con name="fade" en
+   la pagina comparten animacion, y eso incluye uno que se abra encima de
+   otro: los dos salen y entran a la vez, y si uno se cierra mientras el otro
+   se abre se pisan el opacity.
+
+   Por eso hay dos reglas al añadir uno:
+
+   1. Preferir el nombre de Nuxt UI (`<Transition name="fade">` ya viene con
+      su CSS si se usa el componente UModal con transition="fade") antes que
+      declarar un nombre propio global.
+
+   2. Si el nombre es propio, que sea especifico (`lightbox-fade`, no `fade`)
+      y sus clases esten en main.css con un comentario que diga quien las usa.
    ========================================================================== */

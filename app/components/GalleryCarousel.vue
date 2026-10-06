@@ -214,10 +214,12 @@ onUnmounted(() => {
 
     <!--
       Tira de miniaturas. Es un segundo Carousel con itemsToShow=4 y SIN
-      wrapAround: con wrapAround la libreria clona slides para cerrar el
-      circulo, y los clones cuentan como imagenes en el registro, asi que el
-      indice que devuelve ya no coincide con el de `images` y la miniatura
-      activa se marca en la posicion equivocada.
+      wrapAround.
+
+      SIN wrapAround es por ritmo, no por seguridad: con wrapAround la tira
+      se vuelve un anillo infinito, y al copiar el valor de la grande esta se
+      recoloca sola en el sentido del scroll. Cuando la grande salta de la
+      ultima a la primera, la tira tambien, y parece un salto de pagina.
 
       Solo recibe :model-value, nunca v-model: la grande es la que escribe.
     -->

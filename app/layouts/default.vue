@@ -31,7 +31,7 @@ const isCommandPaletteOpen = useCommandPalette()
 
 <template>
   <div class="flex min-h-svh flex-col">
-    <UHeader>
+    <UHeader class="w-full">
       <template #left>
         <!-- Icono del proyecto. Reemplaza por tu logo. -->
         <NuxtLink

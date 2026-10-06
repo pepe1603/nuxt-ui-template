@@ -15,12 +15,12 @@
 // Y hay una trampa de accesibilidad que no tiene arreglo con CSS: si el
 // carrusel mueve solo, las tarjetas que no estan visibles siguen siendo
 // tabulables y el foco se va a un elemento que nadie ve. Por eso
-// stopOnInteraction va activado, para que el raton pare el avance, y para
+// pauseOnHover va activado, para que el raton pare el avance, y para
 // que el contenido importante no dependa de que el visitante lo vea por
 // azar.
 useSeoMeta({
   title: 'Carrusel',
-  description: 'UCarousel con las tarjetas que se ven a la vez decidedas por breakpoint.'
+  description: 'Carrusel de vue3-carousel con las tarjetas que se ven a la vez decididas por breakpoint.'
 })
 
 // Las imagenes de picsum van con su host en la lista de domains de
@@ -29,7 +29,7 @@ const slides = [
   {
     image: 'https://picsum.photos/id/1015/1200/800',
     title: 'Rio entre montanas',
-    description: 'basis-full: una imagen entera, la opcion para una portada o un anuncio.',
+    description: 'itemsToShow 1: una imagen entera, la opcion para una portada o un anuncio.',
     alt: 'Rio caudaloso entre laderas rocosas',
     icon: 'i-lucide-mountain',
     to: '#'
@@ -37,7 +37,7 @@ const slides = [
   {
     image: 'https://picsum.photos/id/1016/1200/800',
     title: 'Caminos de tierra',
-    description: 'Con sm:basis-1/2, dos tarjetas desde tablet y una sola en movil.',
+    description: 'Con breakpoints, dos tarjetas desde tablet y una sola en movil.',
     alt: 'Senda de tierra entre vegetacion',
     icon: 'i-lucide-route',
     to: '#'
@@ -53,7 +53,7 @@ const slides = [
   {
     image: 'https://picsum.photos/id/1019/1200/800',
     title: 'Costa recortada',
-    description: 'Dots y flechas vienen puestos. Se desactivan con arrows y dots.',
+    description: 'Flechas y puntos vienen puestos. Se desactivan con arrows y dots.',
     alt: 'Acantilados junto al mar',
     icon: 'i-lucide-waves',
     to: '#'
@@ -101,7 +101,7 @@ const slides = [
     >
       <UPageHeader
         title="Carrusel"
-        description="UCarousel no tiene prop para cuántas tarjetas se ven: se decide con basis de Tailwind en el slot item. basis-full es una, basis-1/2 son dos, basis-1/3 son tres, y se combinan con sm: y lg:."
+        description="Cuántas tarjetas se ven a la vez es un número, itemsToShow, y el ancho lo calcula la biblioteca. El responsive va aparte, en breakpoints."
       />
     </RevealOnScroll>
 
@@ -126,9 +126,9 @@ const slides = [
               </h2>
 
               <p class="text-muted text-sm">
-                El default del wrapper:
-                <code class="text-primary">perView="basis-full"</code>. Es el
-                carrusel clásico, y el que vale para una portada.
+                El default del wrapper es
+                <code class="text-primary">itemsToShow: 1</code>, y con eso
+                ya sale un carrusel clásico de una tarjeta entera.
               </p>
             </div>
 
@@ -148,15 +148,16 @@ const slides = [
 
               <p class="text-muted text-sm">
                 Con
-                <code class="text-primary">basis-full sm:basis-1/2 lg:basis-1/3</code>.
-                En móvil sigue siendo una tarjeta entera, porque
-                <code class="text-primary">basis-full</code> va sin breakpoint.
+                <code class="text-primary">:breakpoints="{ 640: { itemsToShow: 2 }, 1024: { itemsToShow: 3 } }"</code>.
+                El ancho lo calcula la biblioteca dividiendo el viewport entre
+                las que se ven, así que aquí no hay clases de Tailwind: se
+                escribe el número.
               </p>
             </div>
 
             <AppCarousel
               :items="slides"
-              per-view="basis-full sm:basis-1/2 lg:basis-1/3"
+              :breakpoints="{ 640: { itemsToShow: 2 }, 1024: { itemsToShow: 3 } }"
               :interval="3000"
             />
           </section>
@@ -168,7 +169,7 @@ const slides = [
             variant="subtle"
             icon="i-lucide-info"
             title="Dónde está cada cosa"
-            description="El ancho, en el prop perView. El ritmo, en interval, que por dentro es autoplay.delay de Embla. Las flechas y los dots, en arrows y dots. El ancho de la caja, en w-full overflow-hidden de la raíz."
+            description="Cuántas tarjetas se ven, en itemsToShow, y el responsive en breakpoints. El ritmo, en interval, que aquí es el autoplay en milisegundos y se apaga con 0. Las flechas y los puntos, en arrows y dots. El CSS lo añade el módulo solo: no se importa a mano."
           />
         </RevealOnScroll>
       </div>

@@ -44,10 +44,51 @@ const props = defineProps<{
 
 const current = defineModel<number>({ default: 0 })
 
-// Referencia a la libreria para poder llamar a slideTo y a las flechas.
-// `expose` de Carousel publica next(), prev() y slideTo(index), asi que
-// desde el template ref hay que llamar a .value.next() y no a next().
-const main = useTemplateRef('main')
+// ======================================================================
+// COMO LLAMAR A slideTo Y A LAS FLECHAS
+//
+// El Carousel SI expone next(), prev() y slideTo(index): su setup termina
+// con un `expose(...)` que los incluye. O sea que el runtime funciona y
+// `main.value?.next()` es correcto.
+//
+// El problema es el TIPO, y es cosa de la libreria: el `Carousel` se declara
+// en los .d.ts como
+//
+//     DefineComponent<{ autoplay?: number, ... wrapAround?: boolean }>
+//
+// o sea, SOLO el objeto de props. Ahi no aparece el expose, asi que Volar
+// cree que la instancia es un proxy de props y TS2339 dice que `slideTo` no
+// existe. Es un fallo del .d.ts de la libreria, no del codigo: el metodo esta
+// ahi, y sin el tipado funcionaria igual.
+//
+// OJO con el diagnostico que suelta el editor, que se equivoca de parte a
+// parte. Dice "expose de Carousel publica next(), prev() y slideTo, asi que
+// hay que llamar a .value.next() y no a next()". Las dos mitades:
+//
+//   - Que hay que usar .value.next(): CIERTO, el ref es .value y punto.
+//
+//   - Que expose es lo que los publica: tambien cierto, pero no es la causa
+//     del error. expose si los publica; lo que falta es su tipo.
+//
+// Asi que tocar el .next() por el diagnostico no arregla nada.
+//
+// La solucion es declarar la forma que esperamos y pasarsela a useTemplateRef
+// como generic, que ya devuelve `Readonly<ShallowRef<T | null>>`. Sin generic
+// el T sale `unknown`, y hay que castear despues; con generic no hace falta
+// ningun cast.
+//
+// El nombre de la propiedad importa: `slideTo` y no `nav.slideTo`. El expose
+// de la libreria aplana los metodos al primer nivel (`Object.assign({ next,
+// prev, slideTo }, toRefs(provided))`), asi que en el ref estan planos. El
+// `nav` anidado solo existe dentro del provide, que es otra cosa.
+// ======================================================================
+type CarouselApi = {
+  slideTo: (index: number) => void
+  next: () => void
+  prev: () => void
+}
+
+const main = useTemplateRef<CarouselApi>('main')
 
 function goTo(index: number) {
   main.value?.slideTo(index)
@@ -296,12 +337,26 @@ onUnmounted(() => {
         class="max-h-screen max-w-screen rounded-xl object-contain shadow-2xl"
       />
 
+      <!--
+        Los cuatro botones del overlay llevan `text-white` explicito en vez de
+        color="neutral".
+
+        El motivo: neutral + ghost compila a `text-default`, y `--ui-text` es
+        neutral-700 en light y neutral-200 en dark. Los dos son grises medios,
+        y gris medio sobre `bg-black/90` se ve apagado en los dos temas. El
+        overlay es negro SIEMPRE, con independencia del tema de la pagina, asi
+        que el color del icono tambien tiene que ser fijo.
+
+        Y `color="white"` no es una opcion: UButton no la tiene en su tipo, que
+        es error | neutral | primary | secondary | success | info | warning. Por
+        eso el color va por `text-white` y no por el prop color.
+      -->
       <UButton
         icon="i-lucide-x"
-        color="white"
+        color="neutral"
         variant="ghost"
         size="xl"
-        class="absolute right-4 top-4 rounded-full"
+        class="absolute right-4 top-4 rounded-full text-white hover:bg-white/10"
         aria-label="Cerrar"
         @click="closeLightbox"
       />
@@ -309,10 +364,10 @@ onUnmounted(() => {
       <UButton
         v-if="images.length > 1"
         icon="i-lucide-chevron-left"
-        color="white"
+        color="neutral"
         variant="ghost"
         size="xl"
-        class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full"
+        class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full text-white hover:bg-white/10"
         aria-label="Imagen anterior"
         @click="stepLightbox(-1)"
       />
@@ -320,10 +375,10 @@ onUnmounted(() => {
       <UButton
         v-if="images.length > 1"
         icon="i-lucide-chevron-right"
-        color="white"
+        color="neutral"
         variant="ghost"
         size="xl"
-        class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full"
+        class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full text-white hover:bg-white/10"
         aria-label="Imagen siguiente"
         @click="stepLightbox(1)"
       />

@@ -84,5 +84,14 @@ useSeoMeta({
     <RevealOnScroll animation="from-right">
       <AlertSection />
     </RevealOnScroll>
+
+    <!--
+      MarqueeSection NO va envuelta en RevealOnScroll. Las cintas ya se
+      mueven solas, y una de ellas mas el wrapper del observer serializan dos
+      animaciones sobre el mismo bloque: la entrada se ve lenta y el reveal no
+      aporta nada. El problema real de esta seccion es el overflow horizontal
+      de los degradados, y lo lleva resuelto en su propio contenedor.
+    -->
+    <MarqueeSection />
   </UPage>
 </template>

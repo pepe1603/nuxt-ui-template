@@ -104,7 +104,7 @@ const itemClass = computed(() => props.perView)
       class="h-full"
     >
       <figure class="relative">
-        <UImg
+        <NuxtImg
           :src="item.image"
           :alt="item.alt || item.title"
           loading="lazy"
@@ -142,8 +142,8 @@ const itemClass = computed(() => props.perView)
           label="Ver"
           icon="i-lucide-arrow-right"
           size="xs"
-          color="neutral"
-          variant="link"
+          color="primary"
+          variant="ghost"
           block
           :aria-label="`Ver ${item.title}`"
         />

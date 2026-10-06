@@ -5,7 +5,7 @@ export interface CarouselItem {
   image: string
   title: string
   description?: string
-  /** Texto alternativo. Si falta, UImg usa el title. */
+  /** Texto alternativo. Si falta, la imagen usa el title. */
   alt?: string
   /** Enlace del boton de la tarjeta, si la tarjeta es pulsable. */
   to?: string
@@ -13,141 +13,170 @@ export interface CarouselItem {
 }
 
 // ======================================================================
-// AppCarousel: un UCarousel con los defaults puestos.
+// AppCarousel: un Carousel de vue3-carousel con los defaults puestos.
 //
 // Que aporta este envoltorio:
 //
-//   1. El ancho visible, que es lo unico que hay que decidir de verdad.
+//   1. `itemsToShow` como numero, y no como clases de Tailwind.
 //
-//      UCarousel no tiene prop para "cuantas tarjetas se ven a la vez".
-//      Se decide con clases de Tailwind en `ui.item`: cada item es un
-//      basis, y lo que se ve depende de la suma. basis-full es uno
-//      entero; basis-1/2 son dos; basis-1/3 son tres.
+//      Este es el cambio de fondo respecto a UCarousel. Ahi el ancho visible
+//      se ponia con basis de Tailwind en el item (`basis-1/3`) y no habia
+//      ningun prop para el numero de tarjetas: el ancho lo fijaba el CSS.
+//      Aqui el ancho lo pone la biblioteca en JS, dividiendo el ancho del
+//      viewport entre las que se ven, y el prop es un numero.
 //
-//      Esa es toda la diferencia entre un carrusel de una tarjeta y uno de
-//      seis. Sin el wrapper hay que repetir la misma cadena de clases en
-//      cada uso y acertar con los prefijos sm: y lg: cada vez.
+//   2. `breakpoints` para el ancho por tamano de pantalla, que es donde
+//      vive el responsive. La sintaxis es un objeto cuyo clave es el
+//      breakpoint en px y cuyo valor es config parcial:
 //
-//   2. `perView` con el prefijo puesto. Se escribe `sm:basis-1/2` y no
-//      `sm:1/2`: el wrapper pone el `basis-`, que es la parte que se
-//      olvida a medias. Las opciones son:
+//        breakpoints: { 640: { itemsToShow: 2 }, 1024: { itemsToShow: 3 } }
 //
-//        'basis-full'                        uno a la vez (el clasico)
-//        'basis-full sm:basis-1/2'           dos a partir de sm
-//        'basis-full sm:basis-1/2 lg:basis-1/3'   tres a partir de lg
+//      OJO con el breakpointMode, que decide contra QUE se mide. Por defecto
+//      es 'viewport', o sea que cuenta el ancho de la ventana. Con 'carousel'
+//      contaria el ancho del propio carrusel, que dentro de un contenedor
+//      estrecho haria que los breakpoints saltaran antes. Para un carrusel
+//      normal se quiere el de la ventana: 'viewport'.
 //
-//   3. El autoplay con su intervalo. OJO: UCarousel NO tiene prop
-//      `autoplay-interval`. El intervalo va DENTRO del objeto autoplay y se
-//      llama `delay`, porque viene de Embla: `:autoplay="{ delay: 3000 }"`.
-//      Si se escribe `autoplay-interval`, Vue lo suelta como atributo, Embla
-//      recibe `{}` y el carrusel avanza cada 2000ms (su defecto) sin decir
-//      nada. Es el fallo mas dificil de ver de esta API porque todo
-//      funciona: solo al ritmo, que no es el que se pidio.
+//   3. `autoplay` como numero de milisegundos, no como objeto.
 //
-// `containScroll` no se pone: UCarousel ya lo trae en 'trimSnaps', que es lo
-// correcto con basis-1/2, donde la ultima tarjeta tiene que terminar en el
-// borde de la siguiente y no dejar medio hueco.
-const props = withDefaults(defineProps<{
+//      Otra diferencia con UCarousel, que tomaba `:autoplay="{ delay }"` por
+//      venir de Embla. Aqui es `:autoplay="3000"` a pelo, y para apagarlo se
+//      pone a 0. Un objeto ahi no falla: se multiplica y da NaN, y el
+//      carrusel se queda parado.
+//
+//   4. La altura. Por defecto la biblioteca pone height: 'auto', que
+//      funciona. Pero las tarjetas se miden y se reparten con
+//      getBoundingClientRect, asi que `height: 'auto'` es lo que hay que
+//      dejar: pasarlo a un px fijo obligaria a saber de antemano cuanto
+//      mide una tarjeta, y con dos lineas de texto el texto se corta.
+withDefaults(defineProps<{
   items: CarouselItem[]
   /**
-   * Cuantas tarjetas se ven a la vez, por breakpoint. Ver la lista de
-   * arriba. El default es el clasico: una tarjeta entera.
+   * Cuantas tarjetas se ven a la vez en el ancho mas pequeno. El responsive
+   * va en `breakpoints`, no aqui: el prop es el valor base.
    */
-  perView?: string
-  /** Milisegundos entre tarjeta y tarjeta. */
+  itemsToShow?: number
+  /**
+   * Ancho por breakpoint, en px de ventana. Cada valor es config parcial del
+   * carrusel. Ejemplo: `{ 640: { itemsToShow: 2 }, 1024: { itemsToShow: 3 } }`
+   */
+  breakpoints?: Record<number, { itemsToShow: number }>
+  /** Milisegundos entre tarjeta y tarjeta. 0 lo apaga. */
   interval?: number
   /** Flechas de anterior y siguiente. */
   arrows?: boolean
   /** Puntos de navegacion. */
   dots?: boolean
-  /** El autoplay se para al pasar el raton o interactuar. */
-  stopOnInteraction?: boolean
+  /** El autoplay se para al pasar el raton. */
+  pauseOnHover?: boolean
+  /** Separacion entre tarjetas, en px. */
+  gap?: number
 }>(), {
-  // Por defecto NO se ven varias: es el carrusel clasico de una tarjeta
-  // entera. Quien quiera ver mas, lo dice.
-  perView: 'basis-full',
+  // Una tarjeta entera a la vez: el clasico. Quien quiera ver mas, lo dice.
+  itemsToShow: 1,
   interval: 3000,
   arrows: true,
   dots: true,
-  stopOnInteraction: true
+  pauseOnHover: true,
+  gap: 16
 })
-
-// El prefijo `basis-` se pone aqui y no en el prop, para que quien llama
-// escriba sm:basis-1/2 en vez de sm:1/2: se lee como lo que es.
-//
-// OJO con el espacio en el default: 'basis-full sm:basis-1/2 lg:basis-1/3'
-// tiene basis-full SIN breakpoint, o sea que en movil sigue siendo una
-// tarjeta entera. Si se escribiera 'sm:basis-1/2' a secas, en movil no
-// tendria ninguna base y la tarjeta se estiria al ancho del contenedor.
-const itemClass = computed(() => props.perView)
 </script>
 
 <template>
   <!--
-    w-full + overflow-hidden: el carrusel calcula su ancho a partir del
-    padre y, sin overflow-hidden, las tarjetas que asoman por el borde
-    hacen scroll horizontal en la pagina entera. Es el sintoma tipico de
-    "en mi movil se mueve toda la web de lado".
+    La biblioteca trae su CSS en dist/carousel.css y el modulo lo anade solo a
+    la lista global, asi que no hay que importarlo aqui ni en nuxt.config.
+
+    NO se pone nada de estilo en el .carousel: sus clases ya traen
+    position: relative, y la posicion de las flechas y los puntos se calcula
+    respecto a esa caja. Un transform o un filter aqui los moveria de sitio.
   -->
-  <UCarousel
-    v-slot="{ item }"
-    :items="items"
-    :ui="{ item: itemClass }"
-    :arrows="arrows"
-    :dots="dots"
-    loop
-    :autoplay="{ delay: interval, stopOnInteraction }"
-    class="w-full overflow-hidden"
+  <Carousel
+    :items-to-show="itemsToShow"
+    :breakpoints="breakpoints"
+    :wrap-around="true"
+    :autoplay="interval"
+    :pause-autoplay-on-hover="pauseOnHover"
+    :gap="gap"
+    :aria-label="`Carrusel de ${items.length} elementos`"
   >
-    <UCard
-      :ui="{ root: 'overflow-hidden' }"
-      class="h-full"
+    <!--
+      El slot default devuelve UN Slide por item y nada mas: la biblioteca
+      mete sus hijos entre viewport y addons con un array plano, asi que
+      cualquier otro elemento aqui acaba dentro del track, como si fuera una
+      tarjeta mas, y se cuenta como un slide mas en la paginacion.
+
+      Las flechas y los puntos van en su propio slot #addons, que es el
+      unico que la biblioteca coloca por encima del track. Con Navigation y
+      Pagination sin template dentro, cada uno dibuja sus botones con el
+      icono SVG que trae la propia libreria: los --vc-* de su CSS ya los
+      posicionan respecto al .carousel, y un boton propio con las clases
+      carousel__next tendria que replicar a mano ese posicionamiento.
+    -->
+    <Slide
+      v-for="item in items"
+      :key="item.title"
     >
-      <figure class="relative">
-        <NuxtImg
-          :src="item.image"
-          :alt="item.alt || item.title"
-          loading="lazy"
-          class="aspect-video w-full object-cover"
-        />
-
-        <!-- La flecha superpuesta no sustituye a las flechas del
-             carrusel: esas son para avanzar, esta es para el tipo de
-             contenido. -->
-        <UIcon
-          v-if="item.icon"
-          :name="item.icon"
-          class="text-primary absolute top-2 left-2 size-6"
-        />
-      </figure>
-
-      <template #header>
-        <h3 class="text-highlighted truncate font-semibold">
-          {{ item.title }}
-        </h3>
-      </template>
-
-      <template #body>
-        <p class="text-muted line-clamp-2 text-sm">
-          {{ item.description }}
-        </p>
-      </template>
-
-      <template
-        v-if="item.to"
-        #footer
+      <UCard
+        :ui="{ root: 'overflow-hidden' }"
+        class="h-full"
       >
-        <UButton
-          :to="item.to"
-          label="Ver"
-          icon="i-lucide-arrow-right"
-          size="xs"
-          color="primary"
-          variant="ghost"
-          block
-          :aria-label="`Ver ${item.title}`"
-        />
-      </template>
-    </UCard>
-  </UCarousel>
+        <figure class="relative">
+          <NuxtImg
+            :src="item.image"
+            :alt="item.alt || item.title"
+            loading="lazy"
+            class="aspect-video w-full object-cover"
+          />
+
+          <!-- El icono va dentro de la imagen, y no la sustituye: es el
+               tipo de contenido, no la navegacion del carrusel. -->
+          <UIcon
+            v-if="item.icon"
+            :name="item.icon"
+            class="text-primary absolute top-2 left-2 size-6"
+          />
+        </figure>
+
+        <template #header>
+          <h3 class="text-highlighted truncate font-semibold">
+            {{ item.title }}
+          </h3>
+        </template>
+
+        <template #body>
+          <p class="text-muted line-clamp-2 text-sm">
+            {{ item.description }}
+          </p>
+        </template>
+
+        <template
+          v-if="item.to"
+          #footer
+        >
+          <UButton
+            :to="item.to"
+            label="Ver"
+            icon="i-lucide-arrow-right"
+            size="xs"
+            color="primary"
+            variant="ghost"
+            block
+            :aria-label="`Ver ${item.title}`"
+          />
+        </template>
+      </UCard>
+    </Slide>
+
+    <!--
+      Un solo template #addons para los dos. Dos templates con el mismo nombre
+      de slot es un error de Vue, no una concatenacion: el segundo sobrescribe
+      al primero y las flechas desaparecen segun el orden de compilacion.
+      Adentro si puede haber v-if, uno por cada hijo.
+    -->
+    <template #addons>
+      <Navigation v-if="arrows" />
+      <Pagination v-if="dots" />
+    </template>
+  </Carousel>
 </template>

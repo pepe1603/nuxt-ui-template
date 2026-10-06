@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     '@nuxt/image',
     '@vueuse/nuxt',
-    '@vueuse/motion/nuxt'
+    '@vueuse/motion/nuxt',
+    'vue3-carousel-nuxt'
   ],
 
   // Sin pathPrefix, una seccion en components/sections/HeroSection.vue se

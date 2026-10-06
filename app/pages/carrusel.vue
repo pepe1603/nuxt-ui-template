@@ -25,6 +25,19 @@ useSeoMeta({
 
 // Las imagenes de picsum van con su host en la lista de domains de
 // nuxt.config.ts, sin lo cual ipx las devuelve sin recortar y sin avif.
+// Imagenes de la galeria. Los hosts van en `domains` de nuxt.config.ts:
+// sin eso, ipx deja pasar la URL sin recortar ni convertir y no avisa.
+const gallery = [
+  'https://picsum.photos/id/1015/1600/900',
+  'https://picsum.photos/id/1016/1600/900',
+  'https://picsum.photos/id/1018/1600/900',
+  'https://picsum.photos/id/1019/1600/900',
+  'https://picsum.photos/id/1024/1600/900',
+  'https://picsum.photos/id/1036/1600/900',
+  'https://picsum.photos/id/1043/1600/900',
+  'https://picsum.photos/id/1050/1600/900'
+]
+
 const slides = [
   {
     image: 'https://picsum.photos/id/1015/1200/800',
@@ -171,6 +184,49 @@ const slides = [
             title="Dónde está cada cosa"
             description="Cuántas tarjetas se ven, en itemsToShow, y el responsive en breakpoints. El ritmo, en interval, que aquí es el autoplay en milisegundos y se apaga con 0. Las flechas y los puntos, en arrows y dots. El CSS lo añade el módulo solo: no se importa a mano."
           />
+        </RevealOnScroll>
+
+        <!--
+          Galeria con tira de miniaturas. Sin `blur` en el RevealOnScroll:
+          un filter crea bloque contenedor para los fixed, y las flechas de
+          la galeria son absolute respecto al .carousel, asi que en un
+          ancestro con filter se posicionarian mal. `fade-up` no deja filter.
+        -->
+        <RevealOnScroll animation="fade-up">
+          <section class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+              <h2 class="text-highlighted font-semibold">
+                Galería con miniaturas
+              </h2>
+
+              <p class="text-muted text-sm">
+                Dos
+                <code class="text-primary">Carousel</code>
+                sobre el mismo índice. La imagen grande escribe el estado al
+                moverse y las miniaturas lo leen; al pulsar una miniatura se
+                llama
+                <code class="text-primary">slideTo</code>
+                sobre la grande.
+              </p>
+            </div>
+
+            <!--
+              ClientOnly porque el carrusel mide con getBoundingClientRect y
+              en el servidor no hay nada que medir: sin esto sale un hueco
+              de altura cero y luego salta. La altura la fija el ratio
+              aspect-video, que es lo que evita ese hueco en cliente.
+            -->
+            <ClientOnly>
+              <GalleryCarousel
+                :images="gallery"
+                alt="Paisaje"
+              />
+
+              <template #fallback>
+                <div class="aspect-video w-full rounded-2xl bg-elevated" />
+              </template>
+            </ClientOnly>
+          </section>
         </RevealOnScroll>
       </div>
     </UPageBody>

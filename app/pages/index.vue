@@ -16,7 +16,7 @@ useSeoMeta({
     -->
     <RevealOnScroll
       animation="fade"
-      :duration="500"
+      :duration="900"
       once
     >
       <HeroSection />
@@ -64,5 +64,34 @@ useSeoMeta({
     <RevealOnScroll animation="fade-up">
       <MotionSection />
     </RevealOnScroll>
+
+    <RevealOnScroll animation="from-right">
+      <ToastSection />
+    </RevealOnScroll>
+
+    <RevealOnScroll animation="zoom-in">
+      <ModalSection />
+    </RevealOnScroll>
+
+    <RevealOnScroll animation="from-left">
+      <DrawerSection />
+    </RevealOnScroll>
+
+    <RevealOnScroll animation="fade-up">
+      <TooltipSection />
+    </RevealOnScroll>
+
+    <RevealOnScroll animation="from-right">
+      <AlertSection />
+    </RevealOnScroll>
+
+    <!--
+      MarqueeSection NO va envuelta en RevealOnScroll. Las cintas ya se
+      mueven solas, y una de ellas mas el wrapper del observer serializan dos
+      animaciones sobre el mismo bloque: la entrada se ve lenta y el reveal no
+      aporta nada. El problema real de esta seccion es el overflow horizontal
+      de los degradados, y lo lleva resuelto en su propio contenedor.
+    -->
+    <MarqueeSection />
   </UPage>
 </template>

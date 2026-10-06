@@ -15,60 +15,47 @@ useHead({
     lang: 'es'
   }
 })
+
+// ======================================================================
+// TOASTER
+// <UApp> es quien monta el <UToaster> que pinta los toasts, y sin el los
+// avisos se encolan pero no se ven. No hace falta pasarle nada: todo tiene
+// valores por defecto.
+//
+// Aqui se le pasa un estado solo para que la seccion de documentacion de
+// los toasts pueda cambiar posicion, duracion o limite en caliente. Si
+// quitas esa seccion, quita estas dos lineas: el binding es opcional.
+// ======================================================================
+
+const toaster = useToasterOptions()
 </script>
 
 <template>
-  <UApp>
-    <UHeader>
-      <template #left>
-        <!-- Icono del proyecto. Reemplaza por tu logo. -->
-        <NuxtLink
-          to="/"
-          class="flex items-center gap-2 rounded-md p-1 -ms-1 focus-visible:outline-primary/25 outline-3"
-        >
-          <UIcon
-            name="i-simple-icons-nuxtdotjs"
-            class="text-primary size-5"
-          />
+  <UApp :toaster="toaster">
+    <!--
+      El shell (cabecera, contenido, pie) vive en layouts/default.vue, no
+      aqui. Nuxt elige layout por pagina, asi que una pagina puede salirse del
+      contenedor con `definePageMeta({ layout: false })`; con el shell en
+      app.vue no habria forma de tener una pagina a sangre.
 
-          <span class="font-semibold">
-            Template
-          </span>
-        </NuxtLink>
-      </template>
-
-      <template #right>
-        <UColorModeButton />
-
-        <UButton
-          to="https://github.com"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
-      </template>
-    </UHeader>
-
-    <UMain>
+      <NuxtLayout> se renderiza por debajo de <NuxtPage>, asi que el orden del
+      DOM es el mismo que antes: header, contenido, pie.
+    -->
+    <NuxtLayout>
       <NuxtPage />
-    </UMain>
+    </NuxtLayout>
 
-    <USeparator />
+    <!--
+      Va aqui y FUERA de UPage, al final del template.
 
-    <UFooter>
-      <template #left>
-        <p class="text-muted text-sm">
-          © {{ new Date().getFullYear() }}
-        </p>
-      </template>
+      Fuera de UPage porque es global: si viviera dentro, solo habria paleta
+      en la pagina actual. Y al final para que en el orden del DOM quede
+      despues del contenido, que es como debe estar una capa que se abre
+      encima de todo.
 
-      <template #right>
-        <p class="text-dimmed text-sm">
-          Nuxt 4 · Nuxt UI · Tailwind v4
-        </p>
-      </template>
-    </UFooter>
+      No hace falta ningun <ClientOnly>: el modal no se pinta hasta que se
+      abre, asi que en el servidor no hay nada que hydratear.
+    -->
+    <AppCommandPalette />
   </UApp>
 </template>

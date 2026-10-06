@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     '@nuxt/image',
     '@vueuse/nuxt',
-    '@vueuse/motion/nuxt'
+    '@vueuse/motion/nuxt',
+    'vue3-carousel-nuxt'
   ],
 
   // Sin pathPrefix, una seccion en components/sections/HeroSection.vue se
@@ -20,6 +21,36 @@ export default defineNuxtConfig({
   },
 
   css: ['~/assets/css/main.css'],
+
+  // El cambio de tema se anima con View Transitions (ver ColorModeToggle.vue),
+  // asi que las transiciones CSS de Nuxt UI tienen que estar apagadas durante
+  // el cambio. En true, @nuxtjs/color-mode inyecta
+  // `* { transition: none !important }` al cambiar de tema y lo retira al
+  // siguiente frame.
+  //
+  // En false, que es el default, el fondo sigue su transicion de color
+  // mientras la API captura el estado NUEVO: la instantanea sale a medio
+  // camino entre los dos temas, y el reveal circular muestra el tema viejo
+  // encima del viejo. El tema no cambia hasta que termina la transicion, y
+  // de golpe. Por eso va en true, y no por estetica.
+  colorMode: {
+    disableTransition: true
+  },
+
+  ui: {
+    experimental: {
+      // componentDetection activa el recorte de temas: Nuxt UI escanea que
+      // componentes se usan de verdad y solo genera el CSS de esos. Con
+      // `true` no haria falta la lista; el array la completa con los que
+      // se usan de forma dinamica y el escaner no puede ver.
+      //
+      // 'Modal' y 'Drawer' van aqui porque AppModal.vue y AppDrawer.vue los
+      // envuelven, pero envuelto no cuenta como dinamico: es una referencia
+      // estatica y el escaner la ve. Se dejan de forma explicita para que sus
+      // temas no dependan de que las secciones que los usan sigan en la pagina.
+      componentDetection: ['Modal', 'Drawer']
+    }
+  },
 
   // A proposito no hay routeRules con prerender: prerenderear '/' hace que
   // nitro emita solo output estatico, y en estatico no hay runtime que sirva

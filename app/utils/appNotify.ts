@@ -72,13 +72,23 @@ export function useAppNotify() {
    *
    * Devuelve lo que devuelve `toast.add`, que es el toast ya creado con su
    * id: util si hay que actualizarlo despues con `toast.update`.
+   *
+   * OJO con el `satisfies`. El tipo `Toast` es el de la SALIDA, con id y con
+   * todos los callbacks (`onEscapeKeyDown`, `onPause`, `onResume`...) que
+   * rellena el propio `add`. La ENTRADA es `Partial<Toast>`: ahi nadie esta
+   * obligado a nada, y con `satisfies Toast` el codigo pedia a mano campos
+   * que el llamante no tiene por que saber.
+   *
+   * El `satisfies` se queda igualmente: sirve para comprobar que `color` es
+   * un color de toast y que `icon` es un nombre de icono valido, que es lo
+   * que interesa. Solo cambia el tipo contra el que se comprueba.
    */
   function notify(message: string, color: NotifyColor = 'primary') {
     return toast.add({
       title: message,
       color,
       icon: icons[color]
-    } satisfies Toast)
+    } satisfies Partial<Toast>)
   }
 
   return { notify }

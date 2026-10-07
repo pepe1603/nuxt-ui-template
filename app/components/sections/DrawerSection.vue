@@ -44,7 +44,22 @@ const drawerSide = computed(() => isDesktop.value ? 'right' : 'bottom')
 // Solo ids que existen de verdad en las secciones de la pagina. Un enlace
 // a un id que nadie define no da error: simplemente no hace nada, que es
 // la clase de fallo mas dificil de detectar en una demo.
-const menu = [
+
+// El tipo del item. Vive aqui y no dentro de `go`, porque es un bug que se
+// paga solo: `go` usa `label` y `icon`, y si su firma declara solo `label`,
+// TypeScript no se queja de acceder a `icon` a no ser que el resto del tipo
+// se lo de otro sitio. Con `as const`, `menu` tiene el tipo mas fino posible,
+// y este interface es lo que tanto `menu` como `go` comparten.
+interface DrawerMenuItem {
+  label: string
+  icon: string
+  to: string
+}
+
+// `menu` no lleva `as const`: no lo necesita. Con const, los literales tipo
+// '#texto' se vuelven literales y `to` deja de ser string, que es lo unico
+// que el codigo usa. Sin const, el tipo de cada item es DrawerMenuItem.
+const menu: DrawerMenuItem[] = [
   { label: 'Texto', icon: 'i-lucide-type', to: '#texto' },
   { label: 'Imagenes', icon: 'i-lucide-image', to: '#imagenes' },
   { label: 'Avisos', icon: 'i-lucide-bell', to: '#toasts' },
@@ -70,7 +85,7 @@ const notes = [
 // Abrir un enlace cierra el cajon. Sin esto, en `bottom` el usuario navega
 // y el cajon se queda encima de la pagina a la que acaba de ir, porque el
 // estado es del padre y nadie lo ha tocado.
-function go(item: { label: string }) {
+function go(item: DrawerMenuItem) {
   menuOpen.value = false
 
   toast.add({

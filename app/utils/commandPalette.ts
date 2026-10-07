@@ -103,34 +103,57 @@ export function useCommandPaletteShortcuts(actions: {
   // objeto: eso no existe en v14, ver el comentario de arriba.
   const magic = useMagicKeys({ passive: false })
 
-  const openPalette = (pressed: boolean) => {
-    if (pressed) {
-      isOpen.value = true
+  // Solo abre, nunca alterna. El `if (pressed)` vive dentro de watchKey: aqui
+  // no llega nada cuando la tecla se suelta.
+  const openPalette = () => {
+    isOpen.value = true
+  }
+
+  // --------------------------------------------------------------------------
+  // POR QUE ESTE watchKey Y NO watch() A MANO
+  //
+  // El tsconfig de Nuxt activa `noUncheckedIndexedAccess`, y el objeto que
+  // devuelve useMagicKeys es un `Record<string, ComputedRef<boolean>>`, no un
+  // objeto cerrado. Pese a que la clave se escribe a mano (`magic.meta_k`),
+  // TS la trata como acceso por indice, asi que su tipo es
+  // `ComputedRef<boolean> | undefined`.
+  //
+  // Y `watch(undefined, cb)` no compila: el overload que le queda exige un
+  // objeto. De ahi sale el error "No overload matches this call", que no
+  // senala la clave sino la firma de watch, y parece un problema con el
+  // segundo argumento cuando en realidad es el primero el que puede faltar.
+  //
+  // La comprobacion va aqui, una sola vez, y se queda con el `if (pressed)`
+  // que antes se repetia en cada llamada.
+  function watchKey(source: ComputedRef<boolean> | undefined, run: () => void) {
+    if (!source) {
+      return
     }
+
+    watch(source, (pressed) => {
+      if (pressed) {
+        run()
+      }
+    })
   }
 
   // ⌘K en Mac, Ctrl+K en Windows y Linux.
-  watch(magic.meta_k, openPalette)
-  watch(magic.ctrl_k, openPalette)
+  watchKey(magic.meta_k, openPalette)
+  watchKey(magic.ctrl_k, openPalette)
 
   // Por pares tambien los de las acciones, porque en Windows y Linux el
   // atajo de tema y copiar es Ctrl+Shift+..., no ⌘. Un kbds que solo
   // funciona en Mac es un kbds que no funciona en la mitad del mundo.
-  for (const key of ['meta_shift_l', 'ctrl_shift_l'] as const) {
-    watch(magic[key], (pressed) => {
-      if (pressed) {
-        actions.toggleColorMode()
-      }
-    })
-  }
-
-  for (const key of ['meta_shift_c', 'ctrl_shift_c'] as const) {
-    watch(magic[key], (pressed) => {
-      if (pressed) {
-        void actions.copyUrl()
-      }
-    })
-  }
+  //
+  // Van las seis claves escritas a mano en vez de en un bucle sobre un array.
+  // Un bucle hace que la clave se lea por indice (`magic[key]`), que es
+  // exactamente lo que dispara el `| undefined` de arriba: con la clave escrita
+  // como propiedad del literal tambien se le aplica noUncheckedIndexedAccess,
+  // pero aqui es un solo sitio donde comprobarlo.
+  watchKey(magic.meta_shift_l, () => actions.toggleColorMode())
+  watchKey(magic.ctrl_shift_l, () => actions.toggleColorMode())
+  watchKey(magic.meta_shift_c, () => void actions.copyUrl())
+  watchKey(magic.ctrl_shift_c, () => void actions.copyUrl())
 
   return isOpen
 }
